@@ -1,0 +1,8 @@
+# Not accessing any lab data
+data/
+output/
+
+# Unnecessary packages 
+.DS_Store
+.Rhistory
+.RData
