@@ -1,28 +1,35 @@
 ### 1 - Data Load ###
 
-loadData <- function(marker.path, phenos.path) {
+loadData <- function(phenos.path, marker.path = NULL) {
+  markers <- NULL
+  phenos <- NULL
 
-  # Load the covariate matrix file
-  if(grepl("\\.rda$", marker.path)) {
-    markers <- get(load(marker.path))
-  } else if (grepl("\\.csv$", marker.path)) {
-    markers <- read.csv(markers.path)
-  } else {
-    stop("Invalid file format for covariate matrix file, Only CSV and RDA files are supported.")
+  if (!is.null(marker.path)) {
+    # Load the covariate matrix file
+    if(grepl("\\.rda$", marker.path)) {
+      markers <- get(load(marker.path))
+    } else if (grepl("\\.csv$", marker.path)) {
+      markers <- read.csv(markers.path)
+    } else {
+      stop("Invalid file format for covariate matrix file, Only CSV and RDA files are supported.")
+    }
   }
   
-  # Load the phenos/environment file
-  if(grepl("\\.rda$", phenos.path)) {
-    phenos <- get(load(phenos.path))
-  } else if (grepl("\\.csv$", phenos.path)) {
-    phenos <- read.csv(phenos.path)
-  } else {
-    stop("Invalid file format for covariate matrix file, Only CSV and RDA files are supported.")
+  if (!is.null(phenos.path)) {
+    # Load the phenos/environment file
+    if(grepl("\\.rda$", phenos.path)) {
+      phenos <- get(load(phenos.path))
+    } else if (grepl("\\.csv$", phenos.path)) {
+      phenos <- read.csv(phenos.path)
+    } else {
+      stop("Invalid file format for covariate matrix file, Only CSV and RDA files are supported.")
+    }
   }
   
   return(list(markers = markers, phenos = phenos))  
 }
 
+# These files are the output of module 1
 createNaNFiles <- function(phenos, markers, nan.freq) {
   # Use args[1] for NaN threshold, # of strains with missing values to keep
   nan.freq.i <- length(unique(phenos[["strain"]])) * nan.freq
