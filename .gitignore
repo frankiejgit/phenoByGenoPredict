@@ -1,8 +1,13 @@
 # Not accessing any lab data
 data/
 output/
+tmp/
+src/data_prep/
 
 # Unnecessary packages 
 .DS_Store
 .Rhistory
 .RData
+
+# Testing scripts
+*/*/test.R
