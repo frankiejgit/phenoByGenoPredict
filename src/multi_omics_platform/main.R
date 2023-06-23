@@ -34,6 +34,18 @@ createNaNFiles(phenos, markers, nan.freq)  # These files are the Mod1 outputs
 
 ### 2 - G/E Matrices ###
 
-## E matrix ##
-createMatrixReport("../E", phenos, markers = NULL, col.env.id = 11)
+# E matrix
+createMatrixPdf("../../output/E/", phenos, markers = NULL, col.env.id = col.env.id )
+
+# G matrix
+createMatrixPdf("../../output/G/", phenos=phenos, markers=markers, 
+                col.env.id = 2, prop.maf.j =  0.03)
+
+# ZE matrix
+createZMatrix(phenos, 11, "../../output/ZE/")
+
+# ZL matrix
+createZMatrix(markers, 2, "../../output/ZL/") # TODO Confirm what dataset to use
+
+
 
