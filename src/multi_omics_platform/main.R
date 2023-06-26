@@ -22,6 +22,7 @@ weighting <- FALSE
 prop.maf.j <- NULL 
 
 cv.reps <- 5
+trait.cols <- 3:11
 
 ### 1 - Data Load ###
 loaded.data <- loadData(phenos.path, marker.path)
@@ -53,6 +54,20 @@ g2.file <- '../../output/E/G.rda'          # path to matrix file 2
 generateIntMatrix(g1.file, g2.file, output.path='../../output/GE/')
 
 ### 3 - Phenotype data prep ###
-phenos_cv <- cvPrep(phenos, 2, folds = 5)
+set.seed(1)
+
+# col.id = 3, 4, 5, 6, 7, 8, 9, 10, 11
+# col.folds = 14
+
+# Do only CV1 and CV2
+phenos.cv <- cvPrep(phenos, paste0("../../output/"), col.id=2, folds = 5, cv0 = FALSE, cv00 = FALSE)
+
+# Do only CV0 and CV00
+for (col in trait.cols) {
+  col.name <- colnames(phenos.cv)[col]
+  phenos.cv <- cvPrep(phenos.cv, paste0("../../output/", col.name,"/cv0/"), col.id = col, col.folds = 14, folds = 5, cv1 = FALSE, cv2 = FALSE, cv00 = FALSE)
+  phenos.cv <- cvPrep(phenos.cv, paste0("../../output/", col.name,"/cv00/"), col.id = col, col.folds = 14, folds = 5, cv1 = FALSE, cv2 = FALSE, cv00 = FALSE)
+}
+
 
 
