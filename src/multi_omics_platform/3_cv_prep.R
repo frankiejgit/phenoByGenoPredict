@@ -39,7 +39,7 @@ cvPrep <- function(phenos, output.path, col.id=NULL, col.folds=NULL, folds = 10,
     colnames(tf) <- paste0(colnames(phenos)[col.id], '_CV0_fold_', 1:folds)
     
     # delete the existing columns to override with new cv values
-    phenos <- phenos[, -which(colnames(phenos) %in% colnames(tf))]
+    phenos <- phenos[, !colnames(phenos) %in% colnames(tf)]
     
     for (f in 1:folds) {
       tf[phenos[,col.folds] == f, f] <- NA
@@ -56,6 +56,9 @@ cvPrep <- function(phenos, output.path, col.id=NULL, col.folds=NULL, folds = 10,
     tf <- matrix(NA, nrow=nrow(phenos), ncol=folds)
     colnames(tf) <- paste0(colnames(phenos)[col.id], '_CV00_fold_', 1:folds)
     tf[,] <- phenos[,col.id]
+    
+    # delete the existing columns to override with new cv values
+    phenos <- phenos[, !colnames(phenos) %in% colnames(tf)]
     
     for (f in 1:folds) {
       tf[phenos[,col.folds] == f, f] <- NA

@@ -65,9 +65,9 @@ phenos.cv <- cvPrep(phenos, paste0("../../output/"), col.id=2, folds = 5, cv0 = 
 # Do only CV0 and CV00
 for (col in trait.cols) {
   col.name <- colnames(phenos.cv)[col]
-  phenos.cv <- cvPrep(phenos.cv, paste0("../../output/", col.name,"/cv0/"), col.id = col, col.folds = 14, folds = 5, cv1 = FALSE, cv2 = FALSE, cv00 = FALSE)
-  phenos.cv <- cvPrep(phenos.cv, paste0("../../output/", col.name,"/cv00/"), col.id = col, col.folds = 14, folds = 5, cv1 = FALSE, cv2 = FALSE, cv00 = FALSE)
-}
+  phenos.cv <- cvPrep(phenos.cv, "../../output/cv/", col.id = col, col.folds = 14,
+                      folds = 5, cv1 = FALSE, cv2 = FALSE)
+  }
 
 
 
