@@ -5,7 +5,8 @@ library(gridExtra)
 
 # Import modules
 source("1_data_load.R")
-source("2_ge_matrices.R")
+source("2_matrices.R")
+source("3_cv_prep.R")
 
 ### USER ARGUMENTS ###
 
@@ -13,13 +14,14 @@ args <- commandArgs(trailingOnly = TRUE)
 nan.freq <- 0.2                            # NaN threshold frequency
 col.env.id <- 11                           # Env ID in phenos file
 marker.path <- "../../data/SNPs.rda"       # Covariate matrix file
-phenos.path <- "../../data/phenos.csv"     # Phenotype/Environment file
+phenos.path <- "../../data/Phenos.csv"     # Phenotype/Environment file
 
 ctr <- TRUE
 std <- TRUE
-weighting <- FALSE                      # Remove line
-prop.maf.j <- NULL                         # Remove line
+weighting <- FALSE
+prop.maf.j <- NULL 
 
+cv.reps <- 5
 
 ### 1 - Data Load ###
 loaded.data <- loadData(phenos.path, marker.path)
@@ -35,17 +37,22 @@ createNaNFiles(phenos, markers, nan.freq)  # These files are the Mod1 outputs
 ### 2 - G/E Matrices ###
 
 # E matrix
-createMatrixPdf("../../output/E/", phenos, markers = NULL, col.env.id = col.env.id )
-
+generateMatrix("../../output/E/", phenos, markers = NULL, col.env.id = col.env.id )
 # G matrix
-createMatrixPdf("../../output/G/", phenos=phenos, markers=markers, 
-                col.env.id = 2, prop.maf.j =  0.03)
-
+generateMatrix("../../output/G/", phenos=phenos, markers=markers, 
+                col.env.id = 2, prop.maf.j =  NULL)
 # ZE matrix
 createZMatrix(phenos, 11, "../../output/ZE/")
-
 # ZL matrix
 createZMatrix(markers, 2, "../../output/ZL/") # TODO Confirm what dataset to use
 
+# Interaction matrix
+g1.file <- '../../output/G/G.rda'          # path to matrix file 1
+g2.file <- '../../output/E/G.rda'          # path to matrix file 2
+
+generateIntMatrix(g1.file, g2.file, output.path='../../output/GE/')
+
+### 3 - Phenotype data prep ###
+phenos_cv <- cvPrep(phenos, 2, folds = 5)
 
 

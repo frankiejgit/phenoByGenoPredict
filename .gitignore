@@ -6,8 +6,9 @@ src/data_prep/
 
 # Unnecessary packages 
 .DS_Store
-.Rhistory
-.RData
+*/.Rhistory
+*/.RData
 
 # Testing scripts
 */*/test.R
+src/multi_omics_platform/multi_omics_platform.RData
