@@ -1,12 +1,19 @@
-runBGLR <- function(phenos, col.phen, col.var, col.cv, col.env = NULL,folds = 5,
-                    cv0 = FALSE, esc=FALSE, nIter = 5000, burnIn = 500) {
+nIter <- 12000
+burnIn <- 2000
+
+runBGLR <- function(phenos, col.phen, col.var, col.cv, col.env = NULL, file_list = NULL, 
+                    folds = 5, cv0 = FALSE, esc=FALSE, nIter = 5000, burnIn = 500) {
   
   # Get values for model fitting
   phen.name <- strsplit(colnames(phenos)[col.phen], "_")[[1]][1]
   y <- phenos[, col.phen]
   gid <- phenos[, col.var]
   
-  if (esc) { y <- scale()}
+  if (esc) { y <- scale() }
+  
+  models <- c('FIXED','RKHS')
+  
+  phen.name <- strplist(colnames(phenos)[col.phen], "_")[[1]][1]
   
 }
 

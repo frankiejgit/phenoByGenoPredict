@@ -1,6 +1,3 @@
-CV1 = TRUE
-CV2 = TRUE
-
 cvPrep <- function(phenos, output.path, col.id=NULL, col.folds=NULL, folds = 10, cv1 = TRUE,
                    cv2 = TRUE, cv0 = TRUE, cv00 = TRUE) {
   

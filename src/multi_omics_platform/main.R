@@ -10,20 +10,23 @@ source("2_matrices.R")
 source("3_cv_prep.R")
 
 ### USER ARGUMENTS ###
+env.col <- 11                           # column with ENV ID
+gid.col <- 2                            # column with genotype ID
+trait.col <- NULL                       # column with desired trait
 
-args <- commandArgs(trailingOnly = TRUE)
-nan.freq <- 0.2                            # NaN threshold frequency
-col.env.id <- 11                           # Env ID in phenos file
-marker.path <- "../../data/SNPs.rda"       # Covariate matrix file
-phenos.path <- "../../data/Phenos.csv"     # Phenotype/Environment file
+marker.path <- "../../data/SNPs.rda"
+phenos.path <- "../../data/Phenos.csv"
+
+nan.freq <- 0.2                         # NaN threshold limit
+reps <- 1                               # Number of repetitions for each analysis
 
 ctr <- TRUE
 std <- TRUE
 weighting <- FALSE
 prop.maf.j <- NULL 
 
-cv.reps <- 5
-trait.cols <- 3:11
+nIter <- 12000
+burnIn <- 2000
 
 ### 1 - Data Load ###
 loaded.data <- loadData(phenos.path, marker.path)
@@ -73,6 +76,7 @@ for (col in trait.cols) {
 
 # CV0 - E+L
 # Only thing that changes between folds is col.phen
+
 
 nIter <- 12000
 burnIn <- 2000
