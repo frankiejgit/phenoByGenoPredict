@@ -1,10 +1,11 @@
-cvPrep <- function(phenos, output.path, col.id=NULL, col.folds=NULL, folds = 10, cv1 = TRUE,
-                   cv2 = TRUE, cv0 = TRUE, cv00 = TRUE) {
+cvPrep <- function(phenos, output.path, col.id=NULL, folds = 10, cv1 = FALSE,
+                   cv2 = FALSE, cv0 = FALSE, cv00 = FALSE) {
   
   # Create output directory if it doesn't exist
   if (!dir.exists(output.path)) { dir.create(output.path) }
   
   IDs <- unique(phenos[, col.id])
+  col.folds <- ncol(phenos)
   
   if (cv1) {
     fold <- rep(1:folds,each=ceiling(length(IDs)/folds))[order(runif(length(IDs)))]

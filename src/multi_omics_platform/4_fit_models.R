@@ -1,248 +1,68 @@
-nIter <- 12000
-burnIn <- 2000
-
-runBGLR <- function(phenos, col.phen, col.var, col.cv, col.env = NULL, file_list = NULL, 
+runBGLR <- function(phenos, phen.col, var.col, cv.col, env.col = NULL, file_list = NULL, 
                     folds = 5, cv0 = FALSE, esc=FALSE, nIter = 5000, burnIn = 500) {
   
+  # Check which model to use
+  items <- length(file_list)
+  if (items == 2) { 
+    mod <- "E+L" 
+  } else if (items == 3) {
+    mod <- "E+L+G"
+  } else if (items == 4) {
+    mod <- "E+L+G+GE"
+  }
+
   # Get values for model fitting
-  phen.name <- strsplit(colnames(phenos)[col.phen], "_")[[1]][1]
-  y <- phenos[, col.phen]
-  gid <- phenos[, col.var]
+  phen.name <- strsplit(colnames(phenos)[phen.col], "_")[[1]][1]
+  y <- phenos[, phen.col]
+  gid <- phenos[, var.col]
   
-  if (esc) { y <- scale() }
+  if (esc) { y <- scale(y, center = TRUE, scale = TRUE) }
   
-  models <- c('FIXED','RKHS')
+  # TODO -- make this option an argument for end user
+  models <- c('FIXED','FIXED', 'RKHS', 'RKHS')
   
-  phen.name <- strplist(colnames(phenos)[col.phen], "_")[[1]][1]
-  
-}
-
-
-phen.name <- strsplit(colnames(phenos.cv)[col.phen], "_")[[1]][1]
-y   <- phenos.cv[, col.phen]
-gid <- phenos.cv[, col.var]
-
-if(esc) { y <- scale(y, center=TRUE, scale=TRUE) }
-
-z.list <- list()
-z.list[[1]] <- '../../output/ZE/Z.rda'
-z.list[[2]] <- '../../output/ZL/Z.rda'
-
-models <- c('FIXED')     # Option to add more
-
-eta <- list()
-for (i in seq_along(z.list)) {
-  Z <- get(load(z.list[[i]]))
-  eta[[i]] <- list(X=Z, model='FIXED')
-  rm(Z)
-}
-
-for (fold in 1:folds) {
-  if (fold != -999) {
+  eta <- list()
+  for (i in seq_along(file_list)) {
+    Z <- get(load(file_list[[i]]))
+    eta[[i]] <- list(X=Z, model='FIXED')
     
-    output.path <- paste("../../output/", phen.name, "/E+L/fold_", fold, "/", sep = "")
-    if (!dir.exists(output.path)) { dir.create(output.path, recursive = TRUE) }
+    if (models[i] == "RKHS") {
+      eta[[i]] <- list(V = EVD$vectors, d=EVD$values, model=models[i])
+      rm(EVD)
+    }
     
-    testing <- which(phenos.cv[, col.cv] == fold)
-    
-    if (cv0) { testing <- intersect(testing, which(gid %in% gid[testing])) }
-    
-    y.na <- y
-    y.na[testing] <- NA
-    
-    fm <- BGLR(y = y.na, ETA = eta, nIter = nIter, burnIn = burnIn, verbose=TRUE)
-    fm$y <- y
-    
-    predictions <- data.frame(testing = testing, Individual = gid[testing], y = y[testing], yHat = fm$yHat[testing])
-    write.table(predictions, file = paste(output.path, "predictions_", fold, ".csv", sep=''), row.names = FALSE, sep = ",")
-    
-  } else {
-    output.path <- paste("../../output/", phen.name, "/full_data/", sep='')
-    if (!dir.exists(output.path)) { dir.create(output.path) }
-    
-    fm <- BGLR(y = y, ETA = ETA, nIter = nIter, burnIn = burnIn, verbose = TRUE)
-    save(fm, file = 'fm_full.RData')
-  }
-  
-  rm(fm)
-  file.remove(list.files(pattern = "*.dat"))
-}
-
-# E + L + G
-evd.path <- '../../output/G/EVD.rda'  
-cv0 <- FALSE
-ESC <- FALSE 
-set.seed(1)
-
-if(esc) { y <- scale(y, center=TRUE, scale=TRUE) }
-
-z.list <- list()
-z.list[[1]] <- '../../output/ZE/Z.rda'
-z.list[[2]] <- '../../output/ZL/Z.rda'
-z.list[[3]] <- evd.path
-
-models <- c('FIXED','FIXED','RKHS')     # Option to add more
-
-eta <- list()
-for (i in seq_along(z.list)) {
-  
-  Z <- get(load(z.list[[i]]))
-  eta[[i]] <- list(X=Z, model='FIXED')
-  
-  if (models[i] == "RKHS") {
-    eta[[i]] <- list(V = EVD$vectors, d=EVD$values, model=models[i])
-    rm(EVD)
-  }
-  
-  rm(Z)
-  
-}
-
-for (fold in 1:folds) {
-  if (fold != -999) {
-    
-    output.path <- paste("../../output/", phen.name, "/E+L+G/fold_", fold, "/", sep = "")
-    if (!dir.exists(output.path)) { dir.create(output.path, recursive = TRUE) }
-    
-    testing <- which(phenos.cv[, col.cv] == fold)
-    
-    if (cv0) { testing <- intersect(testing, which(gid %in% gid[testing])) }
-    
-    y.na <- y
-    y.na[testing] <- NA
-    
-    fm <- BGLR(y = y.na, ETA = eta, nIter = nIter, burnIn = burnIn, verbose=TRUE)
-    fm$y <- y
-    
-    predictions <- data.frame(testing = testing, Individual = gid[testing], y = y[testing], yHat = fm$yHat[testing])
-    write.table(predictions, file = paste(output.path, "predictions_", fold, ".csv", sep=''), row.names = FALSE, sep = ",")
-    
-  } else {
-    output.path <- paste("../../output/", phen.name, "/full_data/", sep='')
-    if (!dir.exists(output.path)) { dir.create(output.path) }
-    
-    fm <- BGLR(y = y, ETA = ETA, nIter = nIter, burnIn = burnIn, verbose = TRUE)
-    save(fm, file = 'fm_full.RData')
-  }
-  
-  rm(fm)
-  file.remove(list.files(pattern = "*.dat"))
-}
-
-
-
-
-
-nk <-length(AB)
-ETA<-list(nk)
-for(i in 1:nk){
-  
-  if(type[i]=='BRR')
-  {
-    load(AB[[i]])
-    ETA[[i]] <- list(X=Z,model='BRR')
     rm(Z)
   }
   
-  if(type[i]=='FIXED')
-  {
-    load(AB[[i]])
-    ETA[[i]] <- list(X=Z,model='FIXED')
-    rm(Z)
+  for (fold in 1:folds) {
+    if (fold != -999) {
+      
+      output.path <- paste("../../output/", phen.name, "/", mod, "/fold_", fold, "/", sep = "")
+      if (!dir.exists(output.path)) { dir.create(output.path, recursive = TRUE) }
+      
+      testing <- which(phenos[, cv.col] == fold)
+      
+      if (cv0) { testing <- intersect(testing, which(gid %in% gid[testing])) }
+      
+      y.na <- y
+      y.na[testing] <- NA
+      
+      fm <- BGLR(y = y.na, ETA = eta, nIter = nIter, burnIn = burnIn, verbose=TRUE)
+      fm$y <- y
+      
+      predictions <- data.frame(testing = testing, Individual = gid[testing], y = y[testing], yHat = fm$yHat[testing])
+      write.table(predictions, file = paste(output.path, "predictions_", fold, ".csv", sep=''), row.names = FALSE, sep = ",")
+      
+    } else {
+      output.path <- paste("../../output/", phen.name, "/full_data/", sep='')
+      if (!dir.exists(output.path)) { dir.create(output.path) }
+      
+      fm <- BGLR(y = y, ETA = ETA, nIter = nIter, burnIn = burnIn, verbose = TRUE)
+      save(fm, file = 'fm_full.RData')
+    }
+    
+    rm(fm)
+    file.remove(list.files(pattern = "*.dat"))
   }
-  
-  if(type[i]=='RKHS')
-  {
-    load(AB[[i]])
-    ETA[[i]] <- list(V=EVD$vectors,d=EVD$values,model='RKHS')
-    rm(EVD)
-  }
-  
-  if(type[i]=='BayesA')
-  {
-    load(AB[[i]])
-    ETA[[i]] <- list(X=X,model='BayesA')
-    rm(X)
-  }
-  
-  if(type[i]=='BayesB')
-  {
-    load(AB[[i]])
-    ETA[[i]] <- list(X=X,model='BayesB')
-    rm(X)
-  }
-  
-  if(type[i]=='BayesC')
-  {
-    load(AB[[i]])
-    ETA[[i]] <- list(X=X,model='BayesC')
-    rm(X)
-  }
-  
-  if(type[i]=='BL')
-  {
-    load(AB[[i]])
-    ETA[[i]] <- list(X=X,model='BL')
-    rm(X)
-  }  
-  print(i)
-}
-
-
-for(fold in folds)
-{
-  
-  yNA<-y
-  print(fold)
-  
-  if(fold != -999)
-  {
-    
-    dir.create(paste('fold_',fold,sep=''))
-    setwd(paste('fold_',fold,sep=''))
-    
-    testing=which(Y[,colCV]==fold)
-    
-    if(CV0)
-    {         
-      testing <- which(gid %in% gid[testing])   
-    }  
-    
-    
-    yNA=y
-    yNA[testing]=NA
-    
-    
-    fm=BGLR(y=yNA,ETA=ETA,nIter=nIter,burnIn=burnIn,verbose=TRUE)
-    fm$y=y
-    
-    predictions=data.frame(testing,Individual=gid[testing], y=y[testing], yHat=fm$yHat[testing])
-    
-    write.table(predictions,file=paste("predictions_",fold,".csv",sep=""),row.names=FALSE,sep=",") # Change to a unique name?
-    
-  }else{
-    
-    dir.create('fullData')
-    setwd('fullData')
-    
-    fm=BGLR(y=y,ETA=ETA,nIter=nIter,burnIn=burnIn,verbose=TRUE)
-    save(fm,file='fm_full.RData')
-    
-  }          
-  
-  print(str(fm))
-  rm(fm)
-  
-  
-  unlink("*.dat")
-  
-  setwd('..')
   
 }
-
-
-
-
-
-
-
