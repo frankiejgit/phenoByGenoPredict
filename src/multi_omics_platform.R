@@ -3,42 +3,44 @@ library(data.table)
 library(ggplot2)
 library(gridExtra)
 library(BGLR)
+library(matrixStats)
 
 # Import modules
-source("1_data_load.R")
+source("1_file_load.R")
 source("2_matrices.R")
 source("3_cv_prep.R")
 source("4_fit_models.R")
 
 ### USER ARGUMENTS ###
+
+marker.path <- "../../data/SNPs.rda"    # Provided by user as marker file
+phenos.path <- "../../data/Phenos.csv"  # Provided as phenotype file
+nan.freq <- 0.2                         # NaN threshold limit
+
 env.col <- 11                           # column with ENV ID
 gid.col <- 2                            # column with genotype ID
 trait.col <- 3                          # column with desired trait
-phen.col <- 15                          # starting CV0 results
-cv.col <- 12
-
-marker.path <- "../../data/SNPs.rda"
-phenos.path <- "../../data/Phenos.csv"
-
-nan.freq <- 0.2                         # NaN threshold limit
-reps <- 1                               # Number of repetitions for each analysis
-folds <- 5                              # Value for k-fold cross-validation
 
 ctr <- TRUE
 std <- TRUE
 weighting <- FALSE
-prop.maf.j <- NULL 
+prop.maf.j <- NULL
 
 cv1 <- TRUE
 cv2 <- TRUE
 cv0 <- TRUE
 cv00 <- TRUE
 
+phen.col <- 15                         # For where to start CV0 columns
+cv.col <- 12                           # TODO - check what this is for
+
+reps <- 1
+folds <- 5
 nIter <- 12000
 burnIn <- 2000
 esc <- FALSE
 
-col.cv <- 12
+### END USER ARGS ###
 
 ### 1 - Data Load ###
 loaded.data <- loadData(phenos.path, marker.path)
@@ -71,31 +73,26 @@ generateIntMatrix(g1.file, g2.file, output.path='../../output/GE/')
 
 ### 3 - Phenotype data prep ###
 set.seed(1)
+
+# Do CV1 and CV2 first
 phenos.cv <- phenos
 
-if (cv1) {
-  phenos.cv <- cvPrep(phenos.cv, "../../output/CV1/", col.id= gid.col , folds = folds, cv1 = TRUE)
-}
+phenos.cv <- cvPrep(phenos.cv, "../../output/cv/", col.id = gid.col, folds = folds,
+                    cv1 = cv1, cv2 = cv2)
 
-if (cv2) {
-  phenos.cv <- cvPrep(phenos.cv, "../../output/CV2/", col.id= gid.col, folds = folds, cv2 = TRUE)
-}
-
-if (cv0) {
-  phenos.cv <- cvPrep(phenos.cv, "../../output/CV0/", col.id = trait.col, folds = folds, cv0 = TRUE)
-}
-
-if (cv00) {
-  phenos.cv <- cvPrep(phenos.cv, "../../output/CV00/", col.id = trait.col, folds = folds, cv00 = TRUE)
-}
+phenos.cv <- cvPrep(phenos.cv, "../../output/cv/", col.id = trait.col, folds = folds,
+                    cv0 = cv0, cv00 = cv00)
 
 ### 4 - Fit models ####
 
+# current structure: cv --> trait --> E+L --> folds --> cols 15:19
 # Output structure: trait (e.g height) --> CV --> fold_n --> predictions.csv 
 
 ab.list <- list()
 ab.list[[1]] <- '../../output/ZE/Z.rda'
 ab.list[[2]] <- '../../output/ZL/Z.rda'
+
+# Find the CV columns
 
 # E + L
 runBGLR(phenos.cv, phen.col, gid.col, cv.col, env.col = NULL, file_list = ab.list, 
@@ -114,3 +111,6 @@ set.seed(1)
 
 runBGLR(phenos.cv, phen.col, gid.col, cv.col, env.col = NULL, file_list = ab.list, 
         folds = folds)
+
+### 5 - Get Results ###
+

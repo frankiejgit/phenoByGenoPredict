@@ -2,13 +2,9 @@
 data/
 output/
 tmp/
-src/data_prep/
+src/ui/
 
 # Unnecessary packages 
-.DS_Store
-*/.Rhistory
-*/.RData
-
-# Testing scripts
-*/*/test.R
-src/multi_omics_platform/multi_omics_platform.RData
+*.DS_Store
+*.Rhistory
+*.RData
