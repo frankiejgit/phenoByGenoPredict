@@ -1,4 +1,4 @@
-runBGLR <- function(phenos, phen.col, var.col, cv.col, env.col = NULL, file_list = NULL, 
+runBGLR <- function(cv.type, phenos, phen.col, var.col, cv.col, env.col = NULL, file_list = NULL, 
                     folds = 5, cv0 = FALSE, esc=FALSE, nIter = 5000, burnIn = 500) {
   
   # Check which model to use
@@ -65,7 +65,7 @@ runBGLR <- function(phenos, phen.col, var.col, cv.col, env.col = NULL, file_list
     file.remove(list.files(pattern = "*.dat"))
   }
   
-  output.path <- paste("../output/", phen.name, "/", mod, "/", sep = "")
+  output.path <- paste("../output/", phen.name, "/", mod, "/", cv.type, "/", sep = "")
   if (!dir.exists(output.path)) { dir.create(output.path, recursive = TRUE) }
   
   write.table(predictions, file = paste(output.path, "predictions.csv", sep=''), row.names = FALSE, sep = ",")

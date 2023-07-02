@@ -89,8 +89,11 @@ phenos.cv <- cvPrep(phenos.cv, "../output/cv/", col.id = trait.col, folds = fold
 # Output structure: trait (e.g height) --> CV --> fold_n --> predictions.csv 
 
 ab.list <- list()
-ab.list[[1]] <- '../output/ZE/Z.rda'
-ab.list[[2]] <- '../output/ZL/Z.rda'
+ab.list[1] <- '../output/ZE/Z.rda'
+ab.list[2] <- '../output/ZL/Z.rda'
+ab.list[3] <- '../../output/G/EVD.rda'  
+ab.list[4] <- '../../output/GE/EVD.rda'  
+
 
 # Find the CV columns
 cv.list <- list(
@@ -111,8 +114,15 @@ for (i in 1:length(cv.list)) {
         print(v)
       }
     } else {
-      # Call the function only for its column
-      print(val)
+      # Run E + L
+      runBGLR(cv, phenos.cv, trait.col, gid.col, val, env.col = NULL, 
+              file_list = ab.list[1:2], folds = folds)
+      # Run E + L + G
+      runBGLR(cv, phenos.cv, trait.col, gid.col, val, env.col = NULL, 
+              file_list = ab.list[1:3], folds = folds)
+      # Run E + L + G + GE
+      runBGLR(cv, phenos.cv, trait.col, gid.col, val, env.col = NULL, 
+              file_list = ab.list, folds = folds)
     }
   }
   
@@ -124,14 +134,12 @@ runBGLR(phenos.cv, phen.col, gid.col, cv1.col, env.col = NULL, file_list = ab.li
         folds = folds)
 
 # E + L + G
-ab.list[[3]] <- '../../output/G/EVD.rda'  
 set.seed(1)
 
 runBGLR(phenos.cv, phen.col, gid.col, cv.col, env.col = NULL, file_list = ab.list, 
         folds = folds)
 
 # E + L + G + GE
-ab.list[[4]] <- '../../output/GE/EVD.rda'  
 set.seed(1)
 
 runBGLR(phenos.cv, phen.col, gid.col, cv1.col, env.col = NULL, file_list = ab.list, 
