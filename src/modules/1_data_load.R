@@ -31,6 +31,11 @@ loadData <- function(phenos.path, marker.path = NULL) {
 
 # These files are the output of module 1
 createNaNFiles <- function(phenos, markers, nan.freq) {
+  
+  # Create output directory if it doesn't exist
+  if (!dir.exists("../tmp")) { dir.create("../tmp/") }
+  
+  
   # Use args[1] for NaN threshold, # of strains with missing values to keep
   nan.freq.i <- length(unique(phenos[["strain"]])) * nan.freq
   NaNs <- colSums(is.na(markers))
@@ -40,16 +45,16 @@ createNaNFiles <- function(phenos, markers, nan.freq) {
   percentage.NaNs <- NaN.freq * 100 / nrow(markers)
   
   # Write the NaN frequencies and percentages to separate CSV files
-  write.table(NaN.freq, file = '../../tmp/NaNs_freq.csv', sep = ',', row.names = FALSE, col.names = FALSE)
+  write.table(NaN.freq, file = '../tmp/NaNs_freq.csv', sep = ',', row.names = FALSE, col.names = FALSE)
   cat("Saved the NaN.freq file in the tmp directory\n")
   
-  write.table(percentage.NaNs, file = '../../tmp/percentage_NaNs.csv', sep = ',', row.names = FALSE, col.names = FALSE)
+  write.table(percentage.NaNs, file = '../tmp/percentage_NaNs.csv', sep = ',', row.names = FALSE, col.names = FALSE)
   cat("Saved the percentage.NaNs file in the tmp directory\n")
   
   # Subset the markers matrix based on a condition and save it as 'X'
   index.2 <- NaNs <= nan.freq.i
   no.NaNs.markers <- markers[, index.2]
-  write.csv(no.NaNs.markers, file = '../../tmp/no_nans_markers.csv', row.names = FALSE)
+  write.csv(no.NaNs.markers, file = '../tmp/no_nans_markers.csv', row.names = FALSE)
   cat("Saved the no.NaNs.markers file in the tmp directory\n")
   
 }

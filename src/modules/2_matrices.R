@@ -1,6 +1,5 @@
 # 2 - Matrices #
 
-### For E matrix ###
 generateMatrix <- function(output.path, phenos, col.env.id, markers=NULL, 
                            weight.file=NULL, prop.maf.j=NULL, ctr=TRUE, std=TRUE) {
   
@@ -12,16 +11,7 @@ generateMatrix <- function(output.path, phenos, col.env.id, markers=NULL,
   cat('== 1 ==> Checking parameters\n')
   
   if (is.null(markers)) {
-    cat('Are you working with a grouping factor? If not, please provide a path
-        of the covariate matrix file\n')
-    
-    user_input <- readline("Do you want to continue wiithout the matrix file? (y/n): ")
-    
-    # Check user's response
-    if (tolower(user_input) == "n") {
-      stop("Please provide the file and re-run the pipeline.\n")
-    }
-    
+    cat("Continuing without a covariate matrix file\n")
   }
   
   cat("== 2 ==> Reading data\n")
@@ -85,7 +75,17 @@ generateMatrix <- function(output.path, phenos, col.env.id, markers=NULL,
       mean.i <- mean(mm.matrix[,i] , na.rm=TRUE)
       if (ctr) { mm.matrix[,i] <- mm.matrix[,i] - mean.i }            # Centering
       # TODO - discuss issue with Inf values
-      #if (std) { mm.matrix[,i] <- mm.matrix[,i]/sd(mm.matrix[,i]) }   # Standardizing 
+      if (std) {                                                      # Standardizing
+        sd_i <- sd(mm.matrix[, i])
+        if (sd_i == 0) {
+          # Handle zero standard deviation
+          # Set specific value or omit rows
+          # Example: Set the column to zero
+          mm.matrix[, i] <- 0
+        } else {
+          mm.matrix[, i] <- mm.matrix[, i] / sd_i
+        }
+      }
       if (weighting) { mm.matrix[,i] <- mm.matrix[,i] * weight[i] }   # Weighting
     }
     

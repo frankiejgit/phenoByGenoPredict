@@ -34,11 +34,11 @@ runBGLR <- function(phenos, phen.col, var.col, cv.col, env.col = NULL, file_list
     rm(Z)
   }
   
+  # Initialize empty data frame to return prediction
+  predictions <- data.frame()
+  
   for (fold in 1:folds) {
     if (fold != -999) {
-      
-      output.path <- paste("../../output/", phen.name, "/", mod, "/fold_", fold, "/", sep = "")
-      if (!dir.exists(output.path)) { dir.create(output.path, recursive = TRUE) }
       
       testing <- which(phenos[, cv.col] == fold)
       
@@ -50,11 +50,11 @@ runBGLR <- function(phenos, phen.col, var.col, cv.col, env.col = NULL, file_list
       fm <- BGLR(y = y.na, ETA = eta, nIter = nIter, burnIn = burnIn, verbose=TRUE)
       fm$y <- y
       
-      predictions <- data.frame(testing = testing, Individual = gid[testing], y = y[testing], yHat = fm$yHat[testing])
-      write.table(predictions, file = paste(output.path, "predictions_", fold, ".csv", sep=''), row.names = FALSE, sep = ",")
+      pred_i <- data.frame(testing = testing, foldNum = fold, gid = gid[testing], y = y[testing], yHat = fm$yHat[testing])
+      predictions <- rbind(predictions, pred_i)
       
     } else {
-      output.path <- paste("../../output/", phen.name, "/full_data/", sep='')
+      output.path <- paste("../output/", phen.name, "/full_data/", sep='')
       if (!dir.exists(output.path)) { dir.create(output.path) }
       
       fm <- BGLR(y = y, ETA = ETA, nIter = nIter, burnIn = burnIn, verbose = TRUE)
@@ -64,5 +64,11 @@ runBGLR <- function(phenos, phen.col, var.col, cv.col, env.col = NULL, file_list
     rm(fm)
     file.remove(list.files(pattern = "*.dat"))
   }
+  
+  output.path <- paste("../output/", phen.name, "/", mod, "/", sep = "")
+  if (!dir.exists(output.path)) { dir.create(output.path, recursive = TRUE) }
+  
+  write.table(predictions, file = paste(output.path, "predictions.csv", sep=''), row.names = FALSE, sep = ",")
+  
   
 }

@@ -51,6 +51,9 @@ cvPrep <- function(phenos, output.path, col.id=NULL, folds = 10, cv1 = FALSE,
     # Specify col for phenotypic trait and for folds
     # Read environmental covariates
     
+    # Use CV1 instead of CV2 for folds
+    col.folds <- col.folds - 1
+    
     tf <- matrix(NA, nrow=nrow(phenos), ncol=folds)
     colnames(tf) <- paste0(colnames(phenos)[col.id], '_CV00_fold_', 1:folds)
     tf[,] <- phenos[,col.id]
