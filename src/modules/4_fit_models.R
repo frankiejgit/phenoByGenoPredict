@@ -1,8 +1,8 @@
-runBGLR <- function(cv.type, phenos, phen.col, var.col, cv.col, env.col = NULL, file_list = NULL, 
-                    folds = 5, cv0 = FALSE, esc=FALSE, nIter = 5000, burnIn = 500) {
+getPredictions <- function(data, cv, phen.col, gid.col, cv.col, file.list, 
+                           folds = 5, esc = FALSE, nIter = 5000, burnIn = 500) {
   
   # Check which model to use
-  items <- length(file_list)
+  items <- length(file.list)
   if (items == 2) { 
     mod <- "E+L" 
   } else if (items == 3) {
@@ -10,21 +10,26 @@ runBGLR <- function(cv.type, phenos, phen.col, var.col, cv.col, env.col = NULL, 
   } else if (items == 4) {
     mod <- "E+L+G+GE"
   }
-
-  # Get values for model fitting
-  phen.name <- strsplit(colnames(phenos)[phen.col], "_")[[1]][1]
-  y <- phenos[, phen.col]
-  gid <- phenos[, var.col]
   
+  # Initialize return object
+  predictions <- data.frame(testing = integer(), fold = integer(), individual = character(),
+                            observed = numeric(), predicted = numeric())
+  
+  # Extract target variable and the id of the variety
+  y <- data[, phen.col]               
+  gid <- data[, gid.col]
+  
+  # Apply scaling to y if esc is enabled
   if (esc) { y <- scale(y, center = TRUE, scale = TRUE) }
   
-  # TODO -- make this option an argument for end user
-  models <- c('FIXED','FIXED', 'RKHS', 'RKHS')
-  
+  # Assign model type to each data
+  models <- c('FIXED','BRR','RKHS','RKHS')    # TODO: give user choice of model selection
   eta <- list()
-  for (i in seq_along(file_list)) {
-    Z <- get(load(file_list[[i]]))
-    eta[[i]] <- list(X=Z, model='FIXED')
+  
+  for (i in seq_along(file.list)) {
+    # Add data and assigned model to ETA
+    Z <- get(load(file.list[[i]]))
+    eta[[i]] <- list(X=Z, model=models[i])
     
     if (models[i] == "RKHS") {
       eta[[i]] <- list(V = EVD$vectors, d=EVD$values, model=models[i])
@@ -34,41 +39,94 @@ runBGLR <- function(cv.type, phenos, phen.col, var.col, cv.col, env.col = NULL, 
     rm(Z)
   }
   
-  # Initialize empty data frame to return prediction
-  predictions <- data.frame()
-  
-  for (fold in 1:folds) {
-    if (fold != -999) {
-      
-      testing <- which(phenos[, cv.col] == fold)
-      
-      if (cv0) { testing <- intersect(testing, which(gid %in% gid[testing])) }
-      
-      y.na <- y
-      y.na[testing] <- NA
-      
-      fm <- BGLR(y = y.na, ETA = eta, nIter = nIter, burnIn = burnIn, verbose=TRUE)
-      fm$y <- y
-      
-      pred_i <- data.frame(testing = testing, foldNum = fold, gid = gid[testing], y = y[testing], yHat = fm$yHat[testing])
-      predictions <- rbind(predictions, pred_i)
-      
-    } else {
-      output.path <- paste("../output/", phen.name, "/full_data/", sep='')
-      if (!dir.exists(output.path)) { dir.create(output.path) }
-      
-      fm <- BGLR(y = y, ETA = ETA, nIter = nIter, burnIn = burnIn, verbose = TRUE)
-      save(fm, file = 'fm_full.RData')
-    }
-    
-    rm(fm)
-    file.remove(list.files(pattern = "*.dat"))
+  # Perform CV1 and CV2
+  if (cv %in% c("cv1","cv2")) {
+    predictions <- crossVal12(data, y, gid, folds, predictions, cv.col, eta, nIter, burnIn)
   }
   
-  output.path <- paste("../output/", phen.name, "/", mod, "/", cv.type, "/", sep = "")
+  if (cv %in% c("cv0","cv00")) {
+    predictions <- crossVal0(data, y, gid, predictions, cv.col, eta, nIter, burnIn)
+  }
+  
+  # Clean up workspace
+  unlink("*.dat")
+  
+  # Save predictions as a file
+  output.path <- paste("../output/", colnames(data)[phen.col], "/", mod, "/", cv, "/", sep = "")
   if (!dir.exists(output.path)) { dir.create(output.path, recursive = TRUE) }
   
-  write.table(predictions, file = paste(output.path, "predictions.csv", sep=''), row.names = FALSE, sep = ",")
+  write.table( predictions, file = paste0(output.path, "predictions.csv"),
+               row.names = FALSE, sep = ",")
   
+  return(predictions)
   
+}
+
+crossVal0 <- function(data, y, gid, predictions, cv.col, eta, nIter, burnIn) {
+  for (i in cv.col) {
+    # Get the train-test data (test data is shown with NA value)
+    y.na <- data[, i]
+    
+    # Record indices of all rows used for testing
+    testing <- which(is.na(y.na))
+      
+    if (tolower(cv) == "cv0") { testing <- intersect(testing, which(gid %in% gid[testing])) }
+    
+    # Get the current fold
+    curr.fold <- tail(strsplit(colnames(data)[cv.col], "_")[[1]], 1)
+    
+    # Fit the BGLR model with the training data
+    fm <- BGLR(y = y.na, ETA = eta, nIter = nIter, burnIn = burnIn, verbose = TRUE)
+      
+    # Generate predictions for testing samples
+    predi <- data.frame(testing = testing, fold = curr.fold, 
+                        individual = gid[testing], observed = y[testing],
+                        predicted = fm$yHat[testing])
+      
+    # Add predictions to a dataset keeping track of results from all folds
+    predictions <- rbind(predictions, predi)
+      
+    } 
+  
+  # Clean up workspace
+  rm(fm)
+  closeAllConnections()
+  return(predictions)
+  
+}
+
+crossVal12 <- function(data, y, gid, folds, predictions, cv.col, eta, nIter, burnIn) {
+  for (fold in 1:folds) {
+    y.na <- y
+    
+    if (fold != -999) {
+      # Get the indices for rows to test on for a given fold
+      testing <- which(data[, cv.col] == fold)     # CV0/00 = env.col, CV1 = 13, CV2 = 14
+      
+      # This is the testing data, all indices in testing have been marked as NA
+      y.na[testing] <- NA
+      
+      # Fit BGLR model with the training data
+      fm <- BGLR(y = y.na, ETA = eta, nIter = nIter, burnIn = burnIn, verbose = TRUE)
+      
+      # Generate predictions for testing samples
+      predi <- data.frame(testing = testing, fold = fold, 
+                          individual = gid[testing], observed = y[testing],
+                          predicted = fm$yHat[testing])
+      
+      # Add predictions to a dataset keeping track of results from all folds
+      predictions <- rbind(predictions, predi)
+      
+    } else {
+      fm <- BGLR(y = y, ETA = ETA, nIter = nIter, burnIn = burnIn, verbose = TRUE)
+      save(fm, file = 'fm_full.RData')
+      predictions <- NULL
+    }
+    
+  }
+  
+  # Clean up workspace
+  rm(fm)
+  closeAllConnections()
+  return(predictions)
 }
