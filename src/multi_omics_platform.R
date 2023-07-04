@@ -15,11 +15,11 @@ source("modules/4_fit_models.R")
 
 marker.path <- "../data/SNPs.rda"    # Provided by user as marker file
 phenos.path <- "../data/Phenos.csv"  # Provided as phenotype file
-nan.freq <- 0.2                         # NaN threshold limit
+nan.freq <- 0.2                      # NaN threshold limit
 
-env.col <- 11                           # column with ENV ID
-gid.col <- 2                            # column with genotype ID
-trait.col <- 3                          # column with desired trait
+env.col <- 12                        # column with ENV ID
+gid.col <- 2                         # column with genotype ID
+trait.col <- 3                       # column with desired trait
 
 ctr <- TRUE
 std <- TRUE
@@ -73,13 +73,9 @@ generateIntMatrix(g1.file, g2.file, output.path='../output/GE/')
 
 ### 3 - Phenotype data prep ###
 set.seed(1)
-
-# Do CV1 and CV2 first
 phenos.cv <- phenos
-
 phenos.cv <- cvPrep(phenos.cv, "../output/cv/", col.id = gid.col, folds = folds,
                     cv1 = cv1, cv2 = cv2)
-
 phenos.cv <- cvPrep(phenos.cv, "../output/cv/", col.id = trait.col, folds = folds,
                     cv0 = cv0, cv00 = cv00)
 
@@ -91,59 +87,32 @@ phenos.cv <- cvPrep(phenos.cv, "../output/cv/", col.id = trait.col, folds = fold
 ab.list <- list()
 ab.list[1] <- '../output/ZE/Z.rda'
 ab.list[2] <- '../output/ZL/Z.rda'
-ab.list[3] <- '../../output/G/EVD.rda'  
-ab.list[4] <- '../../output/GE/EVD.rda'  
-
+ab.list[3] <- '../output/G/EVD.rda'  
+ab.list[4] <- '../output/GE/EVD.rda'  
 
 # Find the CV columns
 cv.list <- list(
   cv1 = match("CV1", colnames(phenos.cv)),
   cv2 = match("CV2", colnames(phenos.cv)),
   cv0 = grep("CV0_", colnames(phenos.cv)),
-  cv00 = grep("CV00_", colnames(phenos.cv))
+  cv00 = grep("CV00_", colnames(phenos.cv), value = TRUE)
 )
 
+set.seed(1)
 for (i in 1:length(cv.list)) {
   cv <- names(cv.list)[i]
   val <- cv.list[i]$cv
   
-  if (get(cv)) {
-    if (length(val) > 1) {
-      # Call the function for all the columns
-      for (v in val) {
-        print(v)
-      }
-    } else {
-      # Run E + L
-      runBGLR(cv, phenos.cv, trait.col, gid.col, val, env.col = NULL, 
-              file_list = ab.list[1:2], folds = folds)
-      # Run E + L + G
-      runBGLR(cv, phenos.cv, trait.col, gid.col, val, env.col = NULL, 
-              file_list = ab.list[1:3], folds = folds)
-      # Run E + L + G + GE
-      runBGLR(cv, phenos.cv, trait.col, gid.col, val, env.col = NULL, 
-              file_list = ab.list, folds = folds)
-    }
-  }
-  
+  # Run E + L
+  getPredictions(phenos.cv, cv, trait.col, gid.col, as.numeric(val), ab.list[1:2], 
+                 folds = 5, esc = FALSE, nIter = 5000, burnIn = 500)
+  # Run E + L + G
+  getPredictions(phenos.cv, cv, trait.col, gid.col, as.numeric(val), ab.list[1:3], 
+                 folds = 5, esc = FALSE, nIter = 5000, burnIn = 500)
+  # Run E + L + G + GE
+  getPredictions(phenos.cv, cv, trait.col, gid.col, as.numeric(val), ab.list, 
+                 folds = 5, esc = FALSE, nIter = 5000, burnIn = 500)
 }
-
-
-# E + L
-runBGLR(phenos.cv, phen.col, gid.col, cv1.col, env.col = NULL, file_list = ab.list, 
-        folds = folds)
-
-# E + L + G
-set.seed(1)
-
-runBGLR(phenos.cv, phen.col, gid.col, cv.col, env.col = NULL, file_list = ab.list, 
-        folds = folds)
-
-# E + L + G + GE
-set.seed(1)
-
-runBGLR(phenos.cv, phen.col, gid.col, cv1.col, env.col = NULL, file_list = ab.list, 
-        folds = folds)
 
 ### 5 - Get Results ###
 
