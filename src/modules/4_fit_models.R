@@ -85,7 +85,6 @@ crossVal0 <- function(data, y, gid, predictions, cv.col, eta, nIter, burnIn) {
       
     # Add predictions to a dataset keeping track of results from all folds
     predictions <- rbind(predictions, predi)
-      
     } 
   
   # Clean up workspace

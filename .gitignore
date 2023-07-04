@@ -9,3 +9,4 @@ src/ui/
 *.Rhistory
 *.RData
 *.dat
+src/modules/v2_4_fit_models_wip.R

@@ -95,7 +95,7 @@ cv.list <- list(
   cv1 = match("CV1", colnames(phenos.cv)),
   cv2 = match("CV2", colnames(phenos.cv)),
   cv0 = grep("CV0_", colnames(phenos.cv)),
-  cv00 = grep("CV00_", colnames(phenos.cv), value = TRUE)
+  cv00 = grep("CV00_", colnames(phenos.cv))
 )
 
 set.seed(1)
@@ -112,6 +112,7 @@ for (i in 1:length(cv.list)) {
   # Run E + L + G + GE
   getPredictions(phenos.cv, cv, trait.col, gid.col, as.numeric(val), ab.list, 
                  folds = 5, esc = FALSE, nIter = 5000, burnIn = 500)
+  
 }
 
 ### 5 - Get Results ###
