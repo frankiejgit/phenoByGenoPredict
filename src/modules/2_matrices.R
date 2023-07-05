@@ -1,7 +1,7 @@
 ### 2 - Generate Matrices ###
 
 generateMatrix <- function(output.path, phenos, col.env.id, markers=NULL, 
-                           weight.file=NULL, prop.maf.j=NULL, ctr=TRUE, std=TRUE) {
+                           prop.maf.j=NULL, ctr=TRUE, std=TRUE, weighting = FALSE) {
   
   env.IDs <- NULL
   
@@ -43,10 +43,10 @@ generateMatrix <- function(output.path, phenos, col.env.id, markers=NULL,
     s <- 0
     col.count <- ncol(markers)
     
-    cat("checking weights\n")
-    if (weighting) {
-      weight <- scan(weight.file, skip =1 ) # TODO check with Dr. Jarquin about this
-    }
+    #cat("checking weights\n")
+    #if (weighting) {
+    #  weight <- scan(weight.file, skip =1 ) # TODO check with Dr. Jarquin about this
+    #}
     
     # Naive imputation
     cat("naive imputation\n")
@@ -64,7 +64,7 @@ generateMatrix <- function(output.path, phenos, col.env.id, markers=NULL,
     
     # Adjusting for MAF proportion
     cat("adjusting for MAF\n")
-    if (!is.null(prop.maf.j)) {
+    if (!is.null(prop.maf.j) | prop.maf.j != 0) {
       maf.idx <- which(p >= prop.maf.j)
       mm.matrix <- mm.matrix[, maf.idx]
     }

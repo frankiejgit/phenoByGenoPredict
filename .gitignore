@@ -2,11 +2,9 @@
 data/
 output/
 tmp/
-src/ui/
 
 # Unnecessary packages 
 *.DS_Store
 *.Rhistory
 *.RData
 *.dat
-src/modules/v2_4_fit_models_wip.R

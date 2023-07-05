@@ -26,11 +26,11 @@ ui <- dashboardPage(
         fluidRow(
           box(
             title = "Data Configuration",
-            numericInput("env_col", "Env ID Column", value = 1),
-            numericInput("trait_col", "Target Trait Column", value = 2),
-            numericInput("gid_col", "Genotype/Variety ID Column", value = 3),
-            numericInput("nan_freq", "NaN Threshold Limit %", value = 10),
-            numericInput("maf_prop_j", "MAF Proportion (Optional)", value = 0, min = 0, max = 1)
+            numericInput("env_col", "Env ID Column", value = 12),
+            numericInput("trait_col", "Target Trait Column", value = 3),
+            numericInput("gid_col", "Genotype/Variety ID Column", value = 2),
+            numericInput("nan_freq", "NaN Threshold Limit %", value = 20),
+            numericInput("maf_prop_j", "MAF Proportion", value = 0, min = 0, max = 1)
           )
         )
       ),
@@ -42,23 +42,24 @@ ui <- dashboardPage(
         fluidRow(
           box(
             title = "Model Options",
-            checkboxInput("e_l", "E + L", value = FALSE),
-            checkboxInput("e_l_g", "E + L + G", value = FALSE),
-            checkboxInput("e_l_g_ge", "E + L + G + GE", value = FALSE)
+            checkboxInput("e_l", "E + L", value = T),
+            checkboxInput("e_l_g", "E + L + G", value = T),
+            checkboxInput("e_l_g_ge", "E + L + G + GE", value = T)
           ),
           box(
             title = "Other Options",
-            checkboxInput("centering", "Centering", value = FALSE),
-            checkboxInput("standardization", "Standardization", value = FALSE),
-            checkboxInput("weighting", "Weighting", value = FALSE)
+            checkboxInput("centering", "Centering", value = T),
+            checkboxInput("standardization", "Standardization", value = T),
+            checkboxInput("weighting", "Weighting", value = FALSE),
+            checkboxInput("esc", "ESC", value = FALSE)
           )
         ),
         fluidRow(
           box(
             title = "Model Parameters",
             numericInput("folds", "Folds", value = 5),
-            numericInput("n_iter", "Number of Iterations (Optional)", value = NA),
-            numericInput("burn_in", "Burn In (Optional)", value = NA)
+            numericInput("n_iter", "Number of Iterations (Optional)", value = 1000),
+            numericInput("burn_in", "Burn In (Optional)", value = 100)
           )
         )
       )
@@ -70,6 +71,45 @@ ui <- dashboardPage(
 # Server
 server <- function(input, output, session) {
   observeEvent(input$run_analysis, {
+    # Run analysis code here
+    # You can access the user inputs using input$<input_id>
+    # For example, input$phenotypic_data will contain the uploaded phenotypic data file
+    # input$env_col will contain the value for the env_col input
+    # Modify the code below to integrate the user inputs with your existing R code
+    
+    # Load required packages and modules
+    library(data.table)
+    library(ggplot2)
+    library(gridExtra)
+    library(BGLR)
+    library(matrixStats)
+    
+    # Source modules
+    source("modules/1_data_load.R")
+    source("modules/2_matrices.R")
+    source("modules/3_cv_prep.R")
+    source("modules/4_fit_models.R")
+    source("modules/5_output_results.R")
+    
+    # Read user inputs
+    phenos.path <- input$phenotypic_data$datapath
+    marker.path <- input$molecular_markers$datapath
+    env.col <- input$env_col
+    trait.col <- input$trait_col
+    gid.col <- input$gid_col
+    nan.freq <- input$nan_freq
+    prop.maf.j <- input$maf_prop_j / 100
+    e.l <- input$e_l
+    e.l.g <- input$e_l_g
+    e.l.g.ge <- input$e_l_g_ge
+    ctr <- input$centering
+    std <- input$standardization
+    weighting <- input$weighting
+    esc <- input$esc
+    folds <- input$folds
+    nIter <- input$n_iter
+    burnIn <- input$burn_in
+    
     # Import packages
     library(data.table)
     library(ggplot2)
@@ -167,8 +207,15 @@ server <- function(input, output, session) {
     
     ### 5 - Get Results ###
     getCvResults(phenos.cv, env.col, trait.col)
-
-  })
+    
+    # Display a message when the analysis is completed
+    showModal(modalDialog(
+      title = "Analysis Completed",
+      "The analysis has finished. Please check the output directory for results.",
+      easyClose = TRUE
+    ))
+    
+    })
 }
 
 # Run the app

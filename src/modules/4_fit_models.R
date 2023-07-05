@@ -43,11 +43,11 @@ getPredictions <- function(data, cv, phen.col, gid.col, cv.col, file.list,
   
   # Perform CV1 and CV2
   if (cv %in% c("cv1","cv2")) {
-    predictions <- crossVal12(data, y, gid, folds, predictions, cv.col, eta, nIter, burnIn)
+    predictions <- fitCv1Cv2(data, y, gid, folds, predictions, cv.col, eta, nIter, burnIn)
   }
   
   if (cv %in% c("cv0","cv00")) {
-    predictions <- crossVal0(data, y, gid, predictions, cv.col, eta, nIter, burnIn)
+    predictions <- fitCv0Cv00(data, y, gid, cv, predictions, cv.col, eta, nIter, burnIn)
   }
   
   # Clean up workspace
@@ -64,7 +64,7 @@ getPredictions <- function(data, cv, phen.col, gid.col, cv.col, file.list,
   
 }
 
-crossVal0 <- function(data, y, gid, predictions, cv.col, eta, nIter, burnIn) {
+fitCv0Cv00 <- function(data, y, gid, cv, predictions, cv.col, eta, nIter, burnIn) {
   for (i in cv.col) {
     # Get the train-test data (test data is shown with NA value)
     y.na <- data[, i]
@@ -96,7 +96,7 @@ crossVal0 <- function(data, y, gid, predictions, cv.col, eta, nIter, burnIn) {
   
 }
 
-crossVal12 <- function(data, y, gid, folds, predictions, cv.col, eta, nIter, burnIn) {
+fitCv1Cv2 <- function(data, y, gid, folds, predictions, cv.col, eta, nIter, burnIn) {
   for (fold in 1:folds) {
     y.na <- y
     
