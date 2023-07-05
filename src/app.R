@@ -1,5 +1,8 @@
 library(shiny)
 library(shinydashboard)
+library(zip)
+library(shinyalert)
+library(shinyjs)
 
 # UI
 ui <- dashboardPage(
@@ -64,12 +67,38 @@ ui <- dashboardPage(
         )
       )
     ),
-    actionButton("run_analysis", "Run Analysis")
+    actionButton("run_analysis", "Run Analysis"),
+    br(),
+    actionButton("download_button", "Download Results")
+    
+    
   )
 )
 
 # Server
 server <- function(input, output, session) {
+  
+  zipReportFiles <- function() {
+
+    # Set the working directory to the "report" folder
+    setwd("../output/report")
+    
+    # Get the file names in the "report" folder
+    fileNames <- list.files()
+    
+    # Create a temporary zip file
+    tempZipFile <- tempfile(fileext = ".zip")
+    
+    # Create the zip file with the files in the "report" folder
+    zip(tempZipFile, files = fileNames)
+    
+    # Return to the original working directory
+    setwd("../../src")
+    
+    # Return the path to the zip file
+    return(tempZipFile)
+  }
+  
   observeEvent(input$run_analysis, {
     # Run analysis code here
     # You can access the user inputs using input$<input_id>
@@ -78,6 +107,8 @@ server <- function(input, output, session) {
     # Modify the code below to integrate the user inputs with your existing R code
     
     # Load required packages and modules
+    library(zip)
+    library(shinyjs)
     library(data.table)
     library(ggplot2)
     library(gridExtra)
@@ -208,15 +239,34 @@ server <- function(input, output, session) {
     ### 5 - Get Results ###
     getCvResults(phenos.cv, env.col, trait.col)
     
-    # Display a message when the analysis is completed
-    showModal(modalDialog(
-      title = "Analysis Completed",
-      "The analysis has finished. Please check the output directory for results.",
-      easyClose = TRUE
-    ))
+    ### 6 - Download results ###
+    zipPath <- zipReportFiles()
     
-    })
+    
+    # Display notification in UI
+    shinyalert::shinyalert(title = "Analysis Completed",
+                           text = "The analysis has finished. Please check the output directory for results.",
+                           type = "success")
+    
+    
+  })
+  
+  # Download handler
+  output$download_report <- downloadHandler(
+    filename = "report.zip",
+    content = function(file) {
+      file.copy(zipPath, file)
+    }
+  )
+  
+  # Disable the download button after clicking
+  observeEvent(input$download_button, {
+    shinyjs::reset("download_button")
+    shinyjs::disable("download_button")
+  })
+  
 }
+
 
 # Run the app
 shinyApp(ui, server)
