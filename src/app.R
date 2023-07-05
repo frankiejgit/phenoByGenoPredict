@@ -1,6 +1,9 @@
 library(shiny)
 library(shinydashboard)
 library(zip)
+library(shinyalert)
+library(data.table)
+library(DT)
 
 # UI
 ui <- dashboardPage(
@@ -83,11 +86,19 @@ ui <- dashboardPage(
             title = "View Data",
             uiOutput("data_files")
           )
+        ),
+        fluidRow(
+          box(
+            title = "Selected Data",
+            style = "overflow-y: scroll; max-height: 400px;",
+            tableOutput("selected_file_contents")
+          )
         )
       )
     )
   )
 )
+
 # Server
 server <- function(input, output, session) {
 
@@ -256,14 +267,16 @@ server <- function(input, output, session) {
     
     # Display a download link for the zip file
     output$download_link <- downloadHandler(
-      filename = "report.zip",
+      filename = "results.zip",
       content = function(file) {
         file.copy(zipPath, file)
       }
+
     )
     
     # Display notification in UI
     shinyalert::shinyalert(
+      session = session,
       title = "Analysis Completed",
       text = "The analysis has finished. Please check the output directory for results.",
       type = "success"
@@ -275,14 +288,27 @@ server <- function(input, output, session) {
     # Get the file names in the "output/report" directory
     fileNames <- list.files("../output/report", full.names = TRUE)
     
-    # Generate download links for each file
+    # Generate file links
     links <- lapply(fileNames, function(file) {
       fileName <- basename(file)
-      downloadLink(file, fileName)
+      link <- tagList(
+        tags$a(href = "#", onclick = paste0("Shiny.setInputValue('selected_file', '", file, "')"), fileName)
+      )
+      return(link)
     })
     
-    # Return the list of download links
+    # Return the list of file links
     tagList(links)
+  })
+  
+  observeEvent(input$selected_file, {
+    if (!is.null(input$selected_file)) {
+      # Read the selected file and render its contents
+      data <- fread(input$selected_file)
+      output$selected_file_contents <- renderTable({
+        data
+      })
+    }
   })
   
 }
