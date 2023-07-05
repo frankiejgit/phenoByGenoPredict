@@ -12,33 +12,10 @@ source("modules/3_cv_prep.R")
 source("modules/4_fit_models.R")
 source("modules/5_output_results.R")
 
-### USER ARGUMENTS ###
-
-marker.path <- "../data/SNPs.rda"    # Provided by user as marker file
-phenos.path <- "../data/Phenos.csv"  # Provided as phenotype file
-nan.freq <- 0.2                      # NaN threshold limit
-
-env.col <- 12                        # column with ENV ID
-gid.col <- 2                         # column with genotype ID
-trait.col <- 3                       # column with desired trait
-
-ctr <- TRUE
-std <- TRUE
-weighting <- FALSE
-prop.maf.j <- NULL
-
 cv1 <- TRUE
 cv2 <- TRUE
 cv0 <- TRUE
 cv00 <- TRUE
-
-reps <- 1
-folds <- 5
-nIter <- 12000
-burnIn <- 2000
-esc <- FALSE
-
-### END USER ARGS ###
 
 ### 1 - Data Load ###
 loaded.data <- loadData(phenos.path, marker.path)
@@ -60,7 +37,7 @@ createNaNFiles(phenos, markers, nan.freq)  # These files are the Mod1 outputs
 generateMatrix("../output/E/", phenos, markers = NULL, col.env.id = env.col)
 # G matrix
 generateMatrix("../output/G/", phenos=phenos, markers=markers, 
-                col.env.id = gid.col, prop.maf.j =  NULL)
+               col.env.id = gid.col, prop.maf.j =  prop.maf.j)
 # ZE matrix
 createZMatrix(phenos, env.col, "../output/ZE/")
 # ZL matrix
@@ -106,18 +83,22 @@ for (i in 1:length(cv.list)) {
   
   # Run E + L
   getPredictions(phenos.cv, cv, trait.col, gid.col, as.numeric(val), ab.list[1:2], 
-                 folds = 5, esc = FALSE, nIter = 5000, burnIn = 500)
+                 folds = folds, esc = esc, nIter = nIter, burnIn = burnIn)
   # Run E + L + G
   getPredictions(phenos.cv, cv, trait.col, gid.col, as.numeric(val), ab.list[1:3], 
-                 folds = 5, esc = FALSE, nIter = 5000, burnIn = 500)
+                 folds = folds, esc = esc, nIter = nIter, burnIn = burnIn)
   # Run E + L + G + GE
   getPredictions(phenos.cv, cv, trait.col, gid.col, as.numeric(val), ab.list, 
-                 folds = 5, esc = FALSE, nIter = 5000, burnIn = 500)
+                 folds = folds, esc = esc, nIter = nIter, burnIn = burnIn)
   
 }
 
 ### 5 - Get Results ###
 getCvResults(phenos.cv, env.col, trait.col)
+
+return(colnames(phenos.cv)[trait.col])
+
+
 
 
 
