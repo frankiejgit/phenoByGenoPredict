@@ -10,6 +10,7 @@ source("modules/1_data_load.R")
 source("modules/2_matrices.R")
 source("modules/3_cv_prep.R")
 source("modules/4_fit_models.R")
+source("modules/5_output_results.R")
 
 ### USER ARGUMENTS ###
 
@@ -116,4 +117,7 @@ for (i in 1:length(cv.list)) {
 }
 
 ### 5 - Get Results ###
+getCvResults(phenos.cv, env.col, trait.col)
+
+
 

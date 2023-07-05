@@ -1,4 +1,4 @@
-getCV1CV2Results <- function(data, env.col, trait.col) {
+getCvResults <- function(data, env.col, trait.col) {
   # Define models, environment, and trait
   models <- rev(c('E+L', 'E+L+G', 'E+L+G+GE'))
   envs <- 1:max(data[, env.col])
@@ -10,8 +10,8 @@ getCV1CV2Results <- function(data, env.col, trait.col) {
   
   # Loop over models
   for (mod in seq_along(models)) {
-    # For CV1 and CV2
-    for (cv in c("cv1","cv2")) {
+    
+    for (cv in c("cv1","cv2", "cv0", "cv00")) {
       
       # Initialize matrices
       tf2 <- matrix(NA, nrow = max(envs), ncol = sd.col)
