@@ -1,8 +1,6 @@
 library(shiny)
 library(shinydashboard)
 library(zip)
-library(shinyalert)
-library(shinyjs)
 
 # UI
 ui <- dashboardPage(
@@ -10,7 +8,8 @@ ui <- dashboardPage(
   dashboardSidebar(
     sidebarMenu(
       menuItem("Data", tabName = "data_tab"),
-      menuItem("Model Tuning", tabName = "model_tuning_tab")
+      menuItem("Model Tuning", tabName = "model_tuning_tab"),
+      menuItem("Results", tabName = "results_tab")
     )
   ),
   dashboardBody(
@@ -35,7 +34,8 @@ ui <- dashboardPage(
             numericInput("nan_freq", "NaN Threshold Limit %", value = 20),
             numericInput("maf_prop_j", "MAF Proportion", value = 0, min = 0, max = 1)
           )
-        )
+        ),
+        actionButton("run_analysis", "Run Analysis")
       ),
       
       # Model Tuning tab
@@ -64,22 +64,34 @@ ui <- dashboardPage(
             numericInput("n_iter", "Number of Iterations (Optional)", value = 1000),
             numericInput("burn_in", "Burn In (Optional)", value = 100)
           )
+        ),
+        actionButton("run_analysis", "Run Analysis")
+      ),
+      
+      # Results tab
+      tabItem(
+        tabName = "results_tab",
+        h2("Results"),
+        fluidRow(
+          box(
+            title = "Download Results",
+            downloadButton("download_link", "Download Results")
+          )
+        ),
+        fluidRow(
+          box(
+            title = "View Data",
+            uiOutput("data_files")
+          )
         )
       )
-    ),
-    actionButton("run_analysis", "Run Analysis"),
-    br(),
-    actionButton("download_button", "Download Results")
-    
-    
+    )
   )
 )
-
 # Server
 server <- function(input, output, session) {
-  
-  zipReportFiles <- function() {
 
+  zipReportFiles <- function() {
     # Set the working directory to the "report" folder
     setwd("../output/report")
     
@@ -239,34 +251,41 @@ server <- function(input, output, session) {
     ### 5 - Get Results ###
     getCvResults(phenos.cv, env.col, trait.col)
     
-    ### 6 - Download results ###
+    # Call the zipReportFiles function to create the zip file
     zipPath <- zipReportFiles()
     
+    # Display a download link for the zip file
+    output$download_link <- downloadHandler(
+      filename = "report.zip",
+      content = function(file) {
+        file.copy(zipPath, file)
+      }
+    )
     
     # Display notification in UI
-    shinyalert::shinyalert(title = "Analysis Completed",
-                           text = "The analysis has finished. Please check the output directory for results.",
-                           type = "success")
-    
-    
+    shinyalert::shinyalert(
+      title = "Analysis Completed",
+      text = "The analysis has finished. Please check the output directory for results.",
+      type = "success"
+    )
+
   })
   
-  # Download handler
-  output$download_report <- downloadHandler(
-    filename = "report.zip",
-    content = function(file) {
-      file.copy(zipPath, file)
-    }
-  )
-  
-  # Disable the download button after clicking
-  observeEvent(input$download_button, {
-    shinyjs::reset("download_button")
-    shinyjs::disable("download_button")
+  output$data_files <- renderUI({
+    # Get the file names in the "output/report" directory
+    fileNames <- list.files("../output/report", full.names = TRUE)
+    
+    # Generate download links for each file
+    links <- lapply(fileNames, function(file) {
+      fileName <- basename(file)
+      downloadLink(file, fileName)
+    })
+    
+    # Return the list of download links
+    tagList(links)
   })
   
 }
-
 
 # Run the app
 shinyApp(ui, server)
