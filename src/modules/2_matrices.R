@@ -1,4 +1,4 @@
-# 2 - Matrices #
+### 2 - Generate Matrices ###
 
 generateMatrix <- function(output.path, phenos, col.env.id, markers=NULL, 
                            weight.file=NULL, prop.maf.j=NULL, ctr=TRUE, std=TRUE) {

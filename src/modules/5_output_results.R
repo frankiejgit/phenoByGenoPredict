@@ -1,3 +1,5 @@
+# 5 - Generate final report ###
+
 getCvResults <- function(data, env.col, trait.col) {
   # Define models, environment, and trait
   models <- rev(c('E+L', 'E+L+G', 'E+L+G+GE'))

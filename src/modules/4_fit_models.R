@@ -1,3 +1,5 @@
+### 4 - Predict trait values using BGLR ###
+
 getPredictions <- function(data, cv, phen.col, gid.col, cv.col, file.list, 
                            folds = 5, esc = FALSE, nIter = 5000, burnIn = 500) {
   

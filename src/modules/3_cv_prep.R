@@ -1,3 +1,5 @@
+### 3 - Prepare data for cross-validation ###
+
 cvPrep <- function(phenos, output.path, col.id=NULL, folds = 10, cv1 = FALSE,
                    cv2 = FALSE, cv0 = FALSE, cv00 = FALSE) {
   
