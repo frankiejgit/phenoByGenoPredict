@@ -104,7 +104,12 @@ server <- function(input, output, session) {
 
   zipReportFiles <- function() {
     # Set the working directory to the "report" folder
-    setwd("../output/report")
+    out.path <- "../output/report"
+
+    # Create output directory if it doesn't exist
+    if (!dir.exists(out.path)) { dir.create(out.path, recursive = TRUE) }
+
+    setwd(out.path)
     
     # Get the file names in the "report" folder
     fileNames <- list.files()

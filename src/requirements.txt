@@ -1,0 +1,11 @@
+shiny
+shinydashboard
+zip
+data.table
+ggplot2
+gridExtra
+BGLR
+matrixStats
+shinyalert
+shinyjs
+DT
