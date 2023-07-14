@@ -1,17 +1,25 @@
 # Use the official R base image from Docker Hub
 FROM r-base
 
-# Copy the R script into the container
-COPY ./ /app/
+# Set the working directory in the container
+WORKDIR /app
 
-# Set the working directory
-WORKDIR /app/src/multi_omics_platform
+# Copy the R Shiny app files to the container
+COPY src/app.R /app/
+COPY src/modules /app/modules
+COPY requirements.txt /app/
+
+# Install necessary dependencies
+RUN apt-get update && apt-get install -y \
+    libssl-dev \
+    libcurl4-openssl-dev \
+    libxml2-dev
 
 # Install required R packages
-RUN Rscript -e "install.packages(c('magrittr','data.table'))"
+RUN R -e "install.packages(readLines('requirements.txt'), repos='https://cran.rstudio.com/')"
 
-# Set the ENTRYPOINT to handle the script execution
-ENTRYPOINT ["Rscript", "main.R"]
+# Expose the Shiny app port
+EXPOSE 3838
 
-# Set the CMD to provide the default argument value
-CMD [filename]
+# Run the Shiny app on container startup
+CMD ["R", "-e", "shiny::runApp('app.R', host='0.0.0.0', port=3838)"]
