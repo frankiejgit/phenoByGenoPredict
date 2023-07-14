@@ -21,7 +21,7 @@ getCvResults <- function(data, env.col, trait.col) {
 
       # Initialize temporary matrix 
       tm <- matrix(NA, nrow = nrow(data), ncol = sd.col + 4)
-      path <- paste("../output", trait, models[mod], cv, "predictions.csv", sep = "/")
+      path <- paste("output", trait, models[mod], cv, "predictions.csv", sep = "/")
       
       # Fill in temp matrix with values
       if(file.exists(path)) {
@@ -78,13 +78,13 @@ getCvResults <- function(data, env.col, trait.col) {
       avc <- sum(ri / vif) / sum(1 / vif)
       
       # Write results to output as CSVs
-      out.dir <- "../output/report/"
+      out.dir <- "output/report/"
       out.path <- paste(rep, cv, trait, models[mod], sep="_")
       
       if (!dir.exists(out.dir)) { dir.create(out.dir, recursive = TRUE) }
       
-      write.csv(tf3, file = paste('../output/report/pa_', out.path, '.csv', sep = ""), row.names = FALSE)
-      write.csv(avc, file = paste('../output/report/avc_', out.path, '.csv', sep= ""), row.names = FALSE)
+      write.csv(tf3, file = paste('output/report/pa_', out.path, '.csv', sep = ""), row.names = FALSE)
+      write.csv(avc, file = paste('output/report/avc_', out.path, '.csv', sep= ""), row.names = FALSE)
       
     }
     

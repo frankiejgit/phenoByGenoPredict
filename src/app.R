@@ -7,7 +7,7 @@ library(DT)
 
 # UI
 ui <- dashboardPage(
-  dashboardHeader(title = "Phenotypic/Genotypic Data Analysis"),
+  dashboardHeader(title = "Phenotypic Trait Data Analysis"),
   dashboardSidebar(
     sidebarMenu(
       menuItem("Data", tabName = "data_tab"),
@@ -102,30 +102,32 @@ ui <- dashboardPage(
 # Server
 server <- function(input, output, session) {
 
+  # TODO: Fix function to only download zip file, not entire directory
   zipReportFiles <- function() {
     # Set the working directory to the "report" folder
-    out.path <- "../output/report"
+    out.path <- "output/report"
 
     # Create output directory if it doesn't exist
     if (!dir.exists(out.path)) { dir.create(out.path, recursive = TRUE) }
-
-    setwd(out.path)
-    
+  
     # Get the file names in the "report" folder
-    fileNames <- list.files()
-    
-    # Create a temporary zip file
-    tempZipFile <- tempfile(fileext = ".zip")
-    
+    fileNames <- list.files(out.path)
+  
+    if (length(fileNames) == 0) {
+      # Handle case when no files exist
+      print("No files to include in the zip file.")
+      return(NULL)
+    }
+  
+    # Create the zip file path
+    zipFilePath <- file.path(out.path, "results.zip")
+  
     # Create the zip file with the files in the "report" folder
-    zip(tempZipFile, files = fileNames)
-    
-    # Return to the original working directory
-    setwd("../../src")
-    
+    zip(zipFilePath, files = file.path(out.path, fileNames))
+  
     # Return the path to the zip file
-    return(tempZipFile)
-  }
+    return(zipFilePath)
+}
   
   observeEvent(input$run_analysis, {
     # Run analysis code here
@@ -169,20 +171,6 @@ server <- function(input, output, session) {
     nIter <- input$n_iter
     burnIn <- input$burn_in
     
-    # Import packages
-    library(data.table)
-    library(ggplot2)
-    library(gridExtra)
-    library(BGLR)
-    library(matrixStats)
-    
-    # Import modules
-    source("modules/1_data_load.R")
-    source("modules/2_matrices.R")
-    source("modules/3_cv_prep.R")
-    source("modules/4_fit_models.R")
-    source("modules/5_output_results.R")
-    
     cv1 <- TRUE
     cv2 <- TRUE
     cv0 <- TRUE
@@ -192,7 +180,7 @@ server <- function(input, output, session) {
     loaded.data <- loadData(phenos.path, marker.path)
     
     # Create output directory if it doesn't exist
-    if (!dir.exists("../output")) { dir.create("../output") }
+    if (!dir.exists("output")) { dir.create("output") }
     
     markers <- loaded.data$markers
     phenos <- loaded.data$phenos
@@ -205,27 +193,27 @@ server <- function(input, output, session) {
     ### 2 - G/E Matrices ###
     
     # E matrix
-    generateMatrix("../output/E/", phenos, markers = NULL, col.env.id = env.col)
+    generateMatrix("output/E/", phenos, markers = NULL, col.env.id = env.col)
     # G matrix
-    generateMatrix("../output/G/", phenos=phenos, markers=markers, 
+    generateMatrix("output/G/", phenos=phenos, markers=markers, 
                    col.env.id = gid.col, prop.maf.j =  prop.maf.j)
     # ZE matrix
-    createZMatrix(phenos, env.col, "../output/ZE/")
+    createZMatrix(phenos, env.col, "output/ZE/")
     # ZL matrix
-    createZMatrix(phenos, gid.col, "../output/ZL/")
+    createZMatrix(phenos, gid.col, "output/ZL/")
     
     # Interaction matrix
-    g1.file <- '../output/G/G.rda'          # path to matrix file 1
-    g2.file <- '../output/E/G.rda'          # path to matrix file 2
+    g1.file <- 'output/G/G.rda'          # path to matrix file 1
+    g2.file <- 'output/E/G.rda'          # path to matrix file 2
     
-    generateIntMatrix(g1.file, g2.file, output.path='../output/GE/')
+    generateIntMatrix(g1.file, g2.file, output.path='output/GE/')
     
     ### 3 - Phenotype data prep ###
     set.seed(1)
     phenos.cv <- phenos
-    phenos.cv <- cvPrep(phenos.cv, "../output/cv/", col.id = gid.col, folds = folds,
+    phenos.cv <- cvPrep(phenos.cv, "output/cv/", col.id = gid.col, folds = folds,
                         cv1 = cv1, cv2 = cv2)
-    phenos.cv <- cvPrep(phenos.cv, "../output/cv/", col.id = trait.col, folds = folds,
+    phenos.cv <- cvPrep(phenos.cv, "output/cv/", col.id = trait.col, folds = folds,
                         cv0 = cv0, cv00 = cv00)
     
     ### 4 - Fit models ####
@@ -234,10 +222,10 @@ server <- function(input, output, session) {
     # Output structure: trait (e.g height) --> CV --> fold_n --> predictions.csv 
     
     ab.list <- list()
-    ab.list[1] <- '../output/ZE/Z.rda'
-    ab.list[2] <- '../output/ZL/Z.rda'
-    ab.list[3] <- '../output/G/EVD.rda'  
-    ab.list[4] <- '../output/GE/EVD.rda'  
+    ab.list[1] <- 'output/ZE/Z.rda'
+    ab.list[2] <- 'output/ZL/Z.rda'
+    ab.list[3] <- 'output/G/EVD.rda'  
+    ab.list[4] <- 'output/GE/EVD.rda'  
     
     # Find the CV columns
     cv.list <- list(
@@ -266,9 +254,13 @@ server <- function(input, output, session) {
     
     ### 5 - Get Results ###
     getCvResults(phenos.cv, env.col, trait.col)
+
+    print("Results collected")
     
     # Call the zipReportFiles function to create the zip file
     zipPath <- zipReportFiles()
+
+    print("zipPath executed")
     
     # Display a download link for the zip file
     output$download_link <- downloadHandler(
@@ -276,8 +268,9 @@ server <- function(input, output, session) {
       content = function(file) {
         file.copy(zipPath, file)
       }
-
     )
+
+    print("Download link created")
     
     # Display notification in UI
     shinyalert::shinyalert(
@@ -291,7 +284,7 @@ server <- function(input, output, session) {
   
   output$data_files <- renderUI({
     # Get the file names in the "output/report" directory
-    fileNames <- list.files("../output/report", full.names = TRUE)
+    fileNames <- list.files("output/report", full.names = TRUE)
     
     # Generate file links
     links <- lapply(fileNames, function(file) {

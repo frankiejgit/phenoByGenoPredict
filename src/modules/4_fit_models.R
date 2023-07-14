@@ -54,7 +54,7 @@ getPredictions <- function(data, cv, phen.col, gid.col, cv.col, file.list,
   unlink("*.dat")
   
   # Save predictions as a file
-  output.path <- paste("../output/", colnames(data)[phen.col], "/", mod, "/", cv, "/", sep = "")
+  output.path <- paste("output/", colnames(data)[phen.col], "/", mod, "/", cv, "/", sep = "")
   if (!dir.exists(output.path)) { dir.create(output.path, recursive = TRUE) }
   
   write.table( predictions, file = paste0(output.path, "predictions.csv"),
