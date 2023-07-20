@@ -67,10 +67,8 @@ ui <- dashboardPage(
             numericInput("n_iter", "Number of Iterations (Optional)", value = 1000),
             numericInput("burn_in", "Burn In (Optional)", value = 100)
           )
-        ),
-        actionButton("run_analysis", "Run Analysis")
+        )
       ),
-      
       # Results tab
       tabItem(
         tabName = "results_tab",
@@ -130,11 +128,6 @@ server <- function(input, output, session) {
 }
   
   observeEvent(input$run_analysis, {
-    # Run analysis code here
-    # You can access the user inputs using input$<input_id>
-    # For example, input$phenotypic_data will contain the uploaded phenotypic data file
-    # input$env_col will contain the value for the env_col input
-    # Modify the code below to integrate the user inputs with your existing R code
     
     # Load required packages and modules
     library(zip)
@@ -180,7 +173,7 @@ server <- function(input, output, session) {
     loaded.data <- loadData(phenos.path, marker.path)
     
     # Create output directory if it doesn't exist
-    if (!dir.exists("output")) { dir.create("output") }
+    if (!dir.exists("tmp")) { dir.create("tmp") }
     
     markers <- loaded.data$markers
     phenos <- loaded.data$phenos
@@ -193,14 +186,14 @@ server <- function(input, output, session) {
     ### 2 - G/E Matrices ###
     
     # E matrix
-    generateMatrix("output/E/", phenos, markers = NULL, col.env.id = env.col)
+    generateMatrix("tmp/E/", phenos, markers = NULL, col.env.id = env.col)
     # G matrix
-    generateMatrix("output/G/", phenos=phenos, markers=markers, 
+    generateMatrix("tmp/G/", phenos=phenos, markers=markers, 
                    col.env.id = gid.col, prop.maf.j =  prop.maf.j)
     # ZE matrix
-    createZMatrix(phenos, env.col, "output/ZE/")
+    createZMatrix(phenos, env.col, "tmp/ZE/")
     # ZL matrix
-    createZMatrix(phenos, gid.col, "output/ZL/")
+    createZMatrix(phenos, gid.col, "tmp/ZL/")
     
     # Interaction matrix
     g1.file <- 'output/G/G.rda'          # path to matrix file 1
@@ -264,7 +257,9 @@ server <- function(input, output, session) {
     
     # Display a download link for the zip file
     output$download_link <- downloadHandler(
-      filename = "results.zip",
+      filename = function() { 
+        "results.zip"
+      },
       content = function(file) {
         file.copy(zipPath, file)
       }
