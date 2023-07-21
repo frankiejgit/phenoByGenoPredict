@@ -1,8 +1,11 @@
 # Use the official R base image from Docker Hub
 FROM r-base
 
+# Create a temporary directory within the container for file storage
+#RUN mkdir /tmp/app-files
+
 # Set the working directory in the container
-WORKDIR /app
+#WORKDIR /app
 
 # Copy the R Shiny app files to the container
 COPY src/app.R /app/
@@ -16,10 +19,10 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev
 
 # Install required R packages
-RUN R -e "install.packages(readLines('requirements.txt'), repos='https://cran.rstudio.com/')"
+RUN R -e "install.packages(readLines('app/requirements.txt'), repos='https://cran.rstudio.com/')"
 
 # Expose the Shiny app port
 EXPOSE 3838
 
 # Run the Shiny app on container startup
-CMD ["R", "-e", "shiny::runApp('app.R', host='0.0.0.0', port=3838)"]
+CMD ["R", "-e", "shiny::runApp('app/app.R', host = '0.0.0.0', port = 3838)"]
