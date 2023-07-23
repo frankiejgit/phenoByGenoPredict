@@ -9,6 +9,8 @@ getCvResults <- function(data, env.col, trait.col) {
   rep <- 1 # TODO: Pass as user argument later
   mean.col <- rep + 1
   sd.col <- rep + 2
+
+  source.path <- "../tmp/app-files/output/"
   
   # Loop over models
   for (mod in seq_along(models)) {
@@ -21,7 +23,7 @@ getCvResults <- function(data, env.col, trait.col) {
 
       # Initialize temporary matrix 
       tm <- matrix(NA, nrow = nrow(data), ncol = sd.col + 4)
-      path <- paste("output", trait, models[mod], cv, "predictions.csv", sep = "/")
+      path <- paste(source.path, trait, models[mod], cv, "predictions.csv", sep = "/")
       
       # Fill in temp matrix with values
       if(file.exists(path)) {
@@ -31,7 +33,7 @@ getCvResults <- function(data, env.col, trait.col) {
         # TODO: think of how to get env name
         tm[pred$testing, 6:7] <- as.matrix(data[, c(1, env.col)])
       } else {
-        print(paste("No data for", "rep", r, "for", toupper(cv), sep = " "))
+        print(paste("No data for", "rep", rep, "for", toupper(cv), sep = " "))
       }
       
       # Track model used and cross validation
@@ -78,13 +80,13 @@ getCvResults <- function(data, env.col, trait.col) {
       avc <- sum(ri / vif) / sum(1 / vif)
       
       # Write results to output as CSVs
-      out.dir <- "output/report/"
       out.path <- paste(rep, cv, trait, models[mod], sep="_")
-      
+      out.dir <- paste0(source.path, 'report/')
+
       if (!dir.exists(out.dir)) { dir.create(out.dir, recursive = TRUE) }
       
-      write.csv(tf3, file = paste('output/report/pa_', out.path, '.csv', sep = ""), row.names = FALSE)
-      write.csv(avc, file = paste('output/report/avc_', out.path, '.csv', sep= ""), row.names = FALSE)
+      write.csv(tf3, file = paste(out.dir, 'pa_', out.path, '.csv', sep = ""), row.names = FALSE)
+      write.csv(avc, file = paste(out.dir, 'avc_', out.path, '.csv', sep= ""), row.names = FALSE)
       
     }
     
