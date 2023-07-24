@@ -103,7 +103,7 @@ server <- function(input, output, session) {
   # TODO: Fix function to only download zip file, not entire directory
   zipReportFiles <- function() {
     # Set the working directory to the "report" folder
-    out.path <- "../tmp/app-files/output/report"
+    out.path <- file.path(output.path, "output", "report")
 
     # Create output directory if it doesn't exist
     if (!dir.exists(out.path)) { dir.create(out.path, recursive = TRUE) }
@@ -168,6 +168,11 @@ server <- function(input, output, session) {
     cv2 <- TRUE
     cv0 <- TRUE
     cv00 <- TRUE
+
+    # TODO - Switch all files to temporary directory
+    #output.path <- tempdir(pattern = "app_data_", tmpdir="../tmp/app-files/")
+    output.path <- "app_data/"
+    if (!dir.exists(output.path)) { dir.create(output.path, recursive = TRUE) }
     
     ### 1 - Data Load ###
     loaded.data <- loadData(phenos.path, marker.path)
@@ -177,11 +182,9 @@ server <- function(input, output, session) {
     rm(loaded.data)
     
     # Create the NaNs csv files
-    createNaNFiles(phenos, markers, nan.freq)  # These files are the Mod1 outputs
+    createNaNFiles(phenos, markers, nan.freq, output.path)  # These files are the Mod1 outputs
     
     ### 2 - G/E Matrices ###
-
-    output.path <- "../tmp/app-files/"
     
     # E matrix
     generateMatrix(paste0(output.path,"E/"), phenos, markers = NULL, col.env.id = env.col)
@@ -232,19 +235,19 @@ server <- function(input, output, session) {
       val <- cv.list[i]$cv
       
       # Run E + L
-      getPredictions(phenos.cv, cv, trait.col, gid.col, as.numeric(val), ab.list[1:2], 
+      getPredictions(phenos.cv, output.path, cv, trait.col, gid.col, as.numeric(val), ab.list[1:2], 
                      folds = folds, esc = esc, nIter = nIter, burnIn = burnIn)
       # Run E + L + G
-      getPredictions(phenos.cv, cv, trait.col, gid.col, as.numeric(val), ab.list[1:3], 
+      getPredictions(phenos.cv, output.path, cv, trait.col, gid.col, as.numeric(val), ab.list[1:3], 
                      folds = folds, esc = esc, nIter = nIter, burnIn = burnIn)
       # Run E + L + G + GE
-      getPredictions(phenos.cv, cv, trait.col, gid.col, as.numeric(val), ab.list, 
+      getPredictions(phenos.cv, output.path, cv, trait.col, gid.col, as.numeric(val), ab.list, 
                      folds = folds, esc = esc, nIter = nIter, burnIn = burnIn)
       
     }
     
     ### 5 - Get Results ###
-    getCvResults(phenos.cv, env.col, trait.col)
+    getCvResults(phenos.cv, env.col, trait.col, output.path)
 
     print("Results collected")
     
@@ -277,7 +280,8 @@ server <- function(input, output, session) {
   
   output$data_files <- renderUI({
     # Get the file names in the "output/report" directory
-    fileNames <- list.files("../tmp/app-files/output/report", full.names = TRUE)
+    final.path <- file.path(output.path, "output", "report")
+    fileNames <- list.files(final.path, full.names = TRUE)
     
     # Generate file links
     links <- lapply(fileNames, function(file) {

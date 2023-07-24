@@ -1,6 +1,6 @@
 ### 4 - Predict trait values using BGLR ###
 
-getPredictions <- function(data, cv, phen.col, gid.col, cv.col, file.list, 
+getPredictions <- function(data, source.path, cv, phen.col, gid.col, cv.col, file.list, 
                            folds = 5, esc = FALSE, nIter = 5000, burnIn = 500) {
   
   # Check which model to use
@@ -54,7 +54,7 @@ getPredictions <- function(data, cv, phen.col, gid.col, cv.col, file.list,
   unlink("*.dat")
   
   # Save predictions as a file
-  output.path <- paste("../tmp/app-files/output/", colnames(data)[phen.col], "/", mod, "/", cv, "/", sep = "")
+  output.path <- paste(source.path, "output/", colnames(data)[phen.col], "/", mod, "/", cv, "/", sep = "")
   if (!dir.exists(output.path)) { dir.create(output.path, recursive = TRUE) }
   
   write.table( predictions, file = paste0(output.path, "predictions.csv"),

@@ -1,6 +1,6 @@
 # 5 - Generate final report ###
 
-getCvResults <- function(data, env.col, trait.col) {
+getCvResults <- function(data, env.col, trait.col, source.dir) {
   # Define models, environment, and trait
   models <- rev(c('E+L', 'E+L+G', 'E+L+G+GE'))
   envs <- 1:max(data[, env.col])
@@ -10,7 +10,7 @@ getCvResults <- function(data, env.col, trait.col) {
   mean.col <- rep + 1
   sd.col <- rep + 2
 
-  source.path <- "../tmp/app-files/output/"
+  source.path <- file.path(source.dir, "output")
   
   # Loop over models
   for (mod in seq_along(models)) {

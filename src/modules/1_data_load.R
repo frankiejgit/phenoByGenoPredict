@@ -30,11 +30,11 @@ loadData <- function(phenos.path, marker.path = NULL) {
 }
 
 # These files are the output of module 1
-createNaNFiles <- function(phenos, markers, nan.freq) {
+createNaNFiles <- function(phenos, markers, nan.freq, output.path) {
 
   # Create output directory if it doesn't exist
-  output.path <- "../tmp/app-files/"
-  if (!dir.exists(output.path)) { dir.create(output.path, recursive = TRUE) }
+  #output.path <- "../tmp/app-files/"
+  #if (!dir.exists(output.path)) { dir.create(output.path, recursive = TRUE) }
 
   # Use args[1] for NaN threshold, # of strains with missing values to keep
   nan.freq.i <- length(unique(phenos[["strain"]])) * nan.freq
