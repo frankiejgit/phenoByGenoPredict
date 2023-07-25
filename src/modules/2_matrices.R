@@ -31,8 +31,8 @@ generateMatrix <- function(output.path, phenos, col.env.id, markers=NULL,
     
     cat('== 3 ==> Saving RDA files\n')
     
-    save(G, file = paste0(output.path, "G.rda"))
-    save(EVD, file = paste0(output.path, "EVD.rda"))
+    save(G, file = file.path(output.path, "G.rda"))
+    save(EVD, file = file.path(output.path, "EVD.rda"))
     
   } else {
     env.IDs <- factor(phenos[, col.env.id])
@@ -107,8 +107,8 @@ generateMatrix <- function(output.path, phenos, col.env.id, markers=NULL,
     
     cat('== 3 ==> Saving RDA files\n')
     
-    save(G, file = paste0(output.path, "G.rda"))
-    save(EVD, file = paste0(output.path, "EVD.rda"))
+    save(G, file = file.path(output.path, "G.rda"))
+    save(EVD, file = file.path(output.path, "EVD.rda"))
   }
   
   cat(' == 4 ==> Creating EVD plot file\n')
@@ -147,7 +147,7 @@ createEvdPdf <- function(EVD, output.path) {
   
   # Combine the two plots
   plots <- grid.arrange(plt1, plt2, plt3, plt4, plt5)
-  ggsave(paste0(output.path, "Eigen.pdf"), plots)
+  ggsave(file.path(output.path, "Eigen.pdf"), plots)
 }
 
 createZMatrix <- function(dataset, col.env.id, output.path) {
@@ -160,9 +160,9 @@ createZMatrix <- function(dataset, col.env.id, output.path) {
   z <- as.matrix(z0[1:nrow(z0),1:ncol(z0)])
   
   # Save files in output dir
-  save(z, file = paste0(output.path, 'Z.rda'))
+  save(z, file = file.path(output.path, 'Z.rda'))
   
-  pdf(paste0(output.path, 'exp_des.pdf'))
+  pdf(file.path(output.path, 'exp_des.pdf'))
   image(z,col=c('white','black'))
   dev.off()
   
@@ -181,8 +181,8 @@ generateIntMatrix <- function(g1.file, g2.file, output.path) {
   GI <- G1 * G2
   EVD <- eigen(GI)
   
-  save(GI, file = paste0(output.path, "G.rda"))
-  save(EVD, file = paste0(output.path, "EVD.rda"))
+  save(GI, file = file.path(output.path, "G.rda"))
+  save(EVD, file = file.path(output.path, "EVD.rda"))
   
   createEvdPdf(EVD, output.path)
   
