@@ -23,7 +23,7 @@ getCvResults <- function(data, env.col, trait.col, source.dir) {
 
       # Initialize temporary matrix 
       tm <- matrix(NA, nrow = nrow(data), ncol = sd.col + 4)
-      path <- paste(source.path, trait, models[mod], cv, "predictions.csv", sep = "/")
+      path <- file.path(source.path, trait, models[mod], cv, "predictions.csv")
       
       # Fill in temp matrix with values
       if(file.exists(path)) {
@@ -81,21 +81,14 @@ getCvResults <- function(data, env.col, trait.col, source.dir) {
       
       # Write results to output as CSVs
       out.path <- paste(rep, cv, trait, models[mod], sep="_")
-      out.dir <- paste0(source.path, 'report/')
+      out.dir <- file.path(source.path, 'report')
 
       if (!dir.exists(out.dir)) { dir.create(out.dir, recursive = TRUE) }
       
-      write.csv(tf3, file = paste(out.dir, 'pa_', out.path, '.csv', sep = ""), row.names = FALSE)
-      write.csv(avc, file = paste(out.dir, 'avc_', out.path, '.csv', sep= ""), row.names = FALSE)
+      write.csv(tf3, file = file.path(out.dir, paste('pa_', out.path, '.csv', sep = "")), row.names = FALSE)
+      write.csv(avc, file = file.path(out.dir, paste('avc_', out.path, '.csv', sep= "")), row.names = FALSE)
       
     }
     
   }
 }
-
-# tf columns: 1 = env name/id, 2 = no. of samples for this env, 3 = obs/pred correlation
-# tf2 cols: 1 = obs/pred correlation, last two cols are for mean and standard deviation
-# tmp_matrix cols: 1 = index, 2 = gID, 3 = obs value, 4 = pred value, 5 = env name, 6:11 = not needed, 12 = env ID, 13 = NA
-# tf3: 1 = env id, 2 = sample size, 3:rep = correlation score for each rep, last two cols are mean and sd
-
-

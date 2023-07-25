@@ -71,7 +71,7 @@ cvPrep <- function(phenos, output.path, col.id=NULL, folds = 10, cv1 = FALSE,
   }
   
   # Save the latest phenos file
-  write.table(phenos, file=paste0(output.path, 'phenos_cv.csv'), sep=',', row.names=F, col.names=T)
+  write.table(phenos, file=file.path(output.path, 'phenos_cv.csv'), sep=',', row.names=F, col.names=T)
   
   return(phenos)
   

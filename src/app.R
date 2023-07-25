@@ -101,7 +101,7 @@ ui <- dashboardPage(
 server <- function(input, output, session) {
 
   # TODO: Fix function to only download zip file, not entire directory
-  zipReportFiles <- function() {
+  zipReportFiles <- function(output.path) {
     # Set the working directory to the "report" folder
     out.path <- file.path(output.path, "output", "report")
 
@@ -170,8 +170,8 @@ server <- function(input, output, session) {
     cv00 <- TRUE
 
     # TODO - Switch all files to temporary directory
-    #output.path <- tempdir(pattern = "app_data_", tmpdir="../tmp/app-files/")
-    output.path <- "app_data/"
+    output.path <- file.path(tempdir(), "app_data")
+    #output.path <- "app_data/"
     if (!dir.exists(output.path)) { dir.create(output.path, recursive = TRUE) }
     
     ### 1 - Data Load ###
@@ -187,27 +187,27 @@ server <- function(input, output, session) {
     ### 2 - G/E Matrices ###
     
     # E matrix
-    generateMatrix(paste0(output.path,"E/"), phenos, markers = NULL, col.env.id = env.col)
+    generateMatrix(file.path(output.path,"E"), phenos, markers = NULL, col.env.id = env.col)
     # G matrix
-    generateMatrix(paste0(output.path,"G/"), phenos=phenos, markers=markers, 
+    generateMatrix(file.path(output.path,"G"), phenos=phenos, markers=markers, 
                    col.env.id = gid.col, prop.maf.j =  prop.maf.j)
     # ZE matrix
-    createZMatrix(phenos, env.col, paste0(output.path,"ZE/"))
+    createZMatrix(phenos, env.col, file.path(output.path,"ZE"))
     # ZL matrix
-    createZMatrix(phenos, gid.col, paste0(output.path,"ZL/"))
+    createZMatrix(phenos, gid.col, file.path(output.path,"ZL/"))
     
     # Interaction matrix
-    g1.file <- paste0(output.path,'G/G.rda')          # path to matrix file 1
-    g2.file <- paste0(output.path,'E/G.rda')          # path to matrix file 2
+    g1.file <- file.path(output.path,'G','G.rda')          # path to matrix file 1
+    g2.file <- file.path(output.path,'E','G.rda')          # path to matrix file 2
     
-    generateIntMatrix(g1.file, g2.file, output.path=paste0(output.path,'GE/'))
+    generateIntMatrix(g1.file, g2.file, output.path=file.path(output.path,'GE/'))
     
     ### 3 - Phenotype data prep ###
     set.seed(1)
     phenos.cv <- phenos
-    phenos.cv <- cvPrep(phenos.cv, paste0(output.path,'cv/'), col.id = gid.col, folds = folds,
+    phenos.cv <- cvPrep(phenos.cv, file.path(output.path,'cv'), col.id = gid.col, folds = folds,
                         cv1 = cv1, cv2 = cv2)
-    phenos.cv <- cvPrep(phenos.cv, paste0(output.path,'cv/'), col.id = trait.col, folds = folds,
+    phenos.cv <- cvPrep(phenos.cv, file.path(output.path,'cv'), col.id = trait.col, folds = folds,
                         cv0 = cv0, cv00 = cv00)
     
     ### 4 - Fit models ####
@@ -216,10 +216,10 @@ server <- function(input, output, session) {
     # Output structure: trait (e.g height) --> CV --> fold_n --> predictions.csv 
     
     ab.list <- list()
-    ab.list[1] <- paste0(output.path,'ZE/Z.rda')
-    ab.list[2] <- paste0(output.path,'ZL/Z.rda')
-    ab.list[3] <- paste0(output.path,'G/EVD.rda')
-    ab.list[4] <- paste0(output.path,'GE/EVD.rda')
+    ab.list[1] <- file.path(output.path,'ZE/Z.rda')
+    ab.list[2] <- file.path(output.path,'ZL/Z.rda')
+    ab.list[3] <- file.path(output.path,'G/EVD.rda')
+    ab.list[4] <- file.path(output.path,'GE/EVD.rda')
     
     # Find the CV columns
     cv.list <- list(
@@ -252,7 +252,7 @@ server <- function(input, output, session) {
     print("Results collected")
     
     # Call the zipReportFiles function to create the zip file
-    zipPath <- zipReportFiles()
+    zipPath <- zipReportFiles(output.path)
 
     print("zipPath executed")
     
