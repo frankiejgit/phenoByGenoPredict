@@ -1,8 +1,5 @@
 # Phenotype-By-Genotype Prediction Tool
 
-
-_Still in progress_
-
 __Outline__
 - About
 - Installation
@@ -11,7 +8,9 @@ __Outline__
 
 ## About
 
-This tool was created by Francisco Gonzalez from the Jarquin Lab at the University of Florida, Department of Agronomy. Its purpose is to help estimate the expression of phenotypic traits by using sparse data collected by plant breeders. 
+This tool was created by Francisco Gonzalez, graduate student at the University of Florida and member of the Jarquin Lab within the Agronomy Department. The purpose of this tools is to help plant breeders and researchers estimate the expression of phenotypic traits by providing environmental and genomic line data. 
+
+Using cross validation techniques and BGLR, the tool can handle sparse datasets to provide predictions with reliable accuracy despite being fed limited data points. 
 
 ## Installation
 
@@ -51,3 +50,21 @@ docker build --no-cache -t pheno_by_geno .
 docker run -p 3838:3838 pheno_by_geno
 ```
 
+## Requirements
+
+In your local computer, you should have access to a terminal to download the tool from the GitHub repository. Additionally, `docker` and `git` should be installed in your computer. 
+
+## Usage Instructions
+
+The tool's model accepts two data files in either CSV or RDA format. The first file should be the training data that contains the phenotypic traits of the crop varieties while the second file should have information of the molecular markers. There are some data formatting requirements for the first file:
+
+- An environment ID/name column must be specified: This can be either in character or integer format
+- The column with the data for the desired phenotypic trait should be specified
+- A column containing the genotypic line or ID must be specified as well
+
+For model tuning, you have the option of configuring the model types you want to use, the type of data processing you want to do prior to training the model with your data, and the model parameters.
+
+The models are as follows:
+- `E+L` = environment
+- `E+L+G` = environment + genotypic line
+- `E+L+G+GE` = environment + genotypic line + GxE interaction
