@@ -100,6 +100,10 @@ ui <- dashboardPage(
 # Server
 server <- function(input, output, session) {
 
+  # TODO - Switch all files to temporary directory
+  output.path <- file.path(tempdir(), "app_data")
+  if (!dir.exists(output.path)) { dir.create(output.path, recursive = TRUE) }
+
   # TODO: Fix function to only download zip file, not entire directory
   zipReportFiles <- function(output.path) {
     # Set the working directory to the "report" folder
@@ -125,7 +129,7 @@ server <- function(input, output, session) {
   
     # Return the path to the zip file
     return(zipFilePath)
-}
+  }
   
   observeEvent(input$run_analysis, {
     
@@ -168,11 +172,6 @@ server <- function(input, output, session) {
     cv2 <- TRUE
     cv0 <- TRUE
     cv00 <- TRUE
-
-    # TODO - Switch all files to temporary directory
-    output.path <- file.path(tempdir(), "app_data")
-    #output.path <- "app_data/"
-    if (!dir.exists(output.path)) { dir.create(output.path, recursive = TRUE) }
     
     ### 1 - Data Load ###
     loaded.data <- loadData(phenos.path, marker.path)
@@ -275,6 +274,8 @@ server <- function(input, output, session) {
       text = "The analysis has finished. Please check the output directory for results.",
       type = "success"
     )
+
+    unlink(output.path)
 
   })
   
