@@ -104,7 +104,6 @@ server <- function(input, output, session) {
   output.path <- file.path(tempdir(), "app_data")
   if (!dir.exists(output.path)) { dir.create(output.path, recursive = TRUE) }
 
-  # TODO: Fix function to only download zip file, not entire directory
   zipReportFiles <- function(output.path) {
     # Set the working directory to the "report" folder
     out.path <- file.path(output.path, "output", "report")
@@ -113,7 +112,7 @@ server <- function(input, output, session) {
     if (!dir.exists(out.path)) { dir.create(out.path, recursive = TRUE) }
   
     # Get the file names in the "report" folder
-    fileNames <- list.files(out.path)
+    fileNames <- list.files(out.path, full.names = TRUE)
   
     if (length(fileNames) == 0) {
       # Handle case when no files exist
@@ -122,10 +121,10 @@ server <- function(input, output, session) {
     }
   
     # Create the zip file path
-    zipFilePath <- file.path(out.path, "results.zip")
+    zipFilePath <- file.path("results.zip")
   
     # Create the zip file with the files in the "report" folder
-    zip(zipFilePath, files = file.path(out.path, fileNames))
+    zip(zipFilePath, files = fileNames)
   
     # Return the path to the zip file
     return(zipFilePath)

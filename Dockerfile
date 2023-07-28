@@ -1,16 +1,10 @@
 # Use the official R base image from Docker Hub
 FROM r-base
 
-# Create a temporary directory within the container for file storage
-#RUN mkdir /tmp/app-files
-
-# Set the working directory in the container
-#WORKDIR /app
-
 # Copy the R Shiny app files to the container
-COPY src/app.R /app/
-COPY src/modules /app/modules
-COPY requirements.txt /app/
+COPY src/app.R/ app/
+COPY src/modules/ app/modules/
+COPY requirements.txt app/
 
 # Install necessary dependencies
 RUN apt-get update && apt-get install -y \
